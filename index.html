@@ -92,9 +92,11 @@
             display: flex;
             gap: 20px;
             margin-bottom: 20px;
+            flex-wrap: wrap;
         }
         .pool, .bag {
             flex: 1;
+            min-width: 280px;
             min-height: 400px;
             border: 2px solid #cbd5e1;
             border-radius: 6px;
@@ -155,9 +157,11 @@
             display: flex;
             gap: 20px;
             margin-bottom: 20px;
+            flex-wrap: wrap;
         }
         .symbol-pool {
             flex: 1.2;
+            min-width: 280px;
             background: #fff;
             border: 2px solid #cbd5e1;
             border-radius: 6px;
@@ -166,6 +170,7 @@
         }
         .symbol-target-container {
             flex: 1;
+            min-width: 280px;
             background: #f0fdf4;
             border: 2px solid #86efac;
             border-radius: 6px;
@@ -209,28 +214,30 @@
             cursor: grab;
         }
 
-        /* Estilos LOTO */
+        /* Estilos LOTO Móvil Amigable */
         .loto-workspace {
             display: flex;
             gap: 20px;
             margin-bottom: 20px;
+            flex-wrap: wrap;
         }
         .loto-visual-panel {
             flex: 1;
+            min-width: 280px;
             background: #fff;
             border: 2px solid #cbd5e1;
             border-radius: 6px;
             padding: 15px;
             text-align: center;
-            min-height: 400px;
+            min-height: 350px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
         }
         .loto-visual-panel img {
-            max-width: 250px;
-            max-height: 250px;
+            max-width: 220px;
+            max-height: 220px;
             object-fit: contain;
             border-radius: 6px;
             border: 1px solid #e2e8f0;
@@ -240,11 +247,12 @@
         }
         .loto-steps-panel {
             flex: 1.5;
+            min-width: 280px;
             background: #f8fafc;
             border: 2px solid #cbd5e1;
             border-radius: 6px;
             padding: 15px;
-            min-height: 400px;
+            min-height: 350px;
         }
         .sortable-step-list {
             display: flex;
@@ -257,26 +265,46 @@
             border: 2px solid #cbd5e1;
             padding: 12px 15px;
             border-radius: 6px;
-            cursor: grab;
             font-weight: bold;
             color: #1e293b;
             box-shadow: 0 1px 3px rgba(0,0,0,0.05);
             display: flex;
             align-items: center;
             justify-content: space-between;
+            gap: 10px;
         }
-        .step-item:active { cursor: grabbing; }
+        .step-content {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+        }
         .step-num {
             background: #2563eb;
             color: white;
             border-radius: 50%;
-            width: 24px;
+            min-width: 24px;
             height: 24px;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 0.85em;
-            margin-right: 10px;
+        }
+        .step-controls {
+            display: flex;
+            gap: 5px;
+        }
+        .btn-step {
+            background: #e2e8f0;
+            color: #1e293b;
+            border: 1px solid #cbd5e1;
+            padding: 6px 10px;
+            font-size: 0.9em;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .btn-step:hover {
+            background: #cbd5e1;
         }
 
         .btn-container {
@@ -442,10 +470,10 @@
         <div id="results-symbols"></div>
     </div>
 
-    <!-- 5. PANTALLA DE JUEGO LOTO -->
+    <!-- 5. PANTALLA DE JUEGO LOTO (Optimizado para Celulares y PCs) -->
     <div id="game-screen-loto" class="game-screen">
         <h2 id="loto-scenario-title">Simulador de Riesgo Eléctrico y LOTO</h2>
-        <div class="instructions">Ordena los pasos de seguridad arrastrándolos verticalmente en la secuencia correcta.</div>
+        <div class="instructions">Usa los botones ⬆️ y ⬇️ para ordenar los pasos de seguridad en la secuencia correcta (1 al N). Funciona en celulares y PC.</div>
 
         <div class="loto-workspace">
             <div class="loto-visual-panel">
@@ -455,8 +483,8 @@
             </div>
 
             <div class="loto-steps-panel">
-                <div class="section-title">Pasos de Seguridad (Ordena de 1 al N)</div>
-                <div class="sortable-step-list" id="loto-steps-list" ondragover="allowDrop(event)"></div>
+                <div class="section-title">Pasos de Seguridad</div>
+                <div class="sortable-step-list" id="loto-steps-list"></div>
             </div>
         </div>
 
@@ -473,7 +501,6 @@
     const GITHUB_USER = 'perdomito-ship-it';
     const GITHUB_REPO = 'cursoelectricidadbasico';
     
-    // Las carpetas que quieres escanear automáticamente de tu repositorio
     const carpetas = ["herramientas", "materiales", "simbolos", "seguridad electrica"];
     let repoData = {};
     let masterData = [];
@@ -482,9 +509,9 @@
     let selectedDifficulty = 5;
 
     const lotoPasosGenericos = [
-        "Verificar ausencia de tensión utilizando un multímetro o medidor adecuado",
-		"Consultar con el dueño del área e identificar el dispositivo de protección",
+        "Consultar con el dueño del área e identificar el dispositivo de protección",
         "Apagar el dispositivo (Breaker/Interruptor)",
+        "Verificar ausencia de tensión utilizando un multímetro o medidor adecuado",
         "Colocar candado y tarjeta de bloqueo (LOTO) si aplica",
         "Confirmar nuevamente que el circuito esté libre de energía y proceder con el trabajo"
     ];
@@ -492,7 +519,6 @@
     let lotoScenarios = [];
     let currentLotoIndex = 0;
 
-    // CONSULTA AUTOMÁTICA EN VIVO A LA API DE GITHUB PARA LEER LAS CARPETAS
     window.onload = async function() {
         try {
             for (let carpeta of carpetas) {
@@ -513,7 +539,6 @@
                                     id: 'item_' + index,
                                     name: nombreLimpio,
                                     file: file.name,
-                                    // Usamos la URL directa de descarga de GitHub para las imágenes dinámicas
                                     img: file.download_url
                                 });
                             }
@@ -522,7 +547,6 @@
                 }
             }
 
-            // Armar escenarios LOTO dinámicamente según las imágenes que encuentre en 'seguridad electrica'
             if (repoData["seguridad electrica"] && repoData["seguridad electrica"].length > 0) {
                 lotoScenarios = repoData["seguridad electrica"].map((item, idx) => ({
                     id: idx + 1,
@@ -532,7 +556,6 @@
                 }));
             }
 
-            // Actualizar contadores en pantalla
             for (let carpeta of carpetas) {
                 let el = document.getElementById(`count-${carpeta}`);
                 let count = repoData[carpeta] ? repoData[carpeta].length : 0;
@@ -583,7 +606,6 @@
     function iniciarTestConDificultad(cantidad) {
         selectedDifficulty = cantidad;
         document.getElementById('difficulty-screen').style.display = 'none';
-
         masterData = repoData[activeMode];
 
         if (activeMode === 'simbolos') {
@@ -773,7 +795,7 @@
         }
     }
 
-    /* --- MODO LOTO --- */
+    /* --- MODO LOTO (Móvil y PC compatible con botones de desplazamiento) --- */
     function cargarEscenarioLoto() {
         const scenario = lotoScenarios[currentLotoIndex];
         document.getElementById('loto-scenario-title').textContent = scenario.title;
@@ -783,43 +805,50 @@
         imgContainer.innerHTML = `<img src="${scenario.imageObj.img}" alt="${scenario.imageObj.name}">`;
 
         let shuffledSteps = [...scenario.steps].sort(() => 0.5 - Math.random());
-        const listContainer = document.getElementById('loto-steps-list');
-        listContainer.innerHTML = '';
-
-        shuffledSteps.forEach((stepText, idx) => {
-            let div = document.createElement('div');
-            div.className = 'step-item';
-            div.draggable = true;
-            div.dataset.stepText = stepText;
-            div.innerHTML = `<span><span class="step-num">${idx + 1}</span>${stepText}</span> ↕️`;
-            
-            div.ondragstart = (e) => { e.dataTransfer.setData('text/plain', stepText); };
-            div.ondragover = (e) => { e.preventDefault(); };
-            div.ondrop = (e) => {
-                e.preventDefault();
-                let draggedText = e.dataTransfer.getData('text/plain');
-                let targetText = div.dataset.stepText;
-                reordenarPasosLoto(draggedText, targetText);
-            };
-
-            listContainer.appendChild(div);
-        });
-
+        renderizarPasosLoto(shuffledSteps);
         document.getElementById('results-loto').style.display = 'none';
     }
 
-    function reordenarPasosLoto(draggedText, targetText) {
+    function renderizarPasosLoto(stepsArray) {
+        const listContainer = document.getElementById('loto-steps-list');
+        listContainer.innerHTML = '';
+
+        stepsArray.forEach((stepText, idx) => {
+            let div = document.createElement('div');
+            div.className = 'step-item';
+            div.dataset.stepText = stepText;
+            div.innerHTML = `
+                <div class="step-content">
+                    <span class="step-num">${idx + 1}</span>
+                    <span>${stepText}</span>
+                </div>
+                <div class="step-controls">
+                    <button class="btn-step" onclick="moverPaso(${idx}, -1)" title="Subir">⬆️</button>
+                    <button class="btn-step" onclick="moverPaso(${idx}, 1)" title="Bajar">⬇️</button>
+                </div>
+            `;
+            listContainer.appendChild(div);
+        });
+    }
+
+    function moverPaso(index, direccion) {
         const listContainer = document.getElementById('loto-steps-list');
         let items = Array.from(listContainer.children);
-        let draggedNode = items.find(el => el.dataset.stepText === draggedText);
-        let targetNode = items.find(el => el.dataset.stepText === targetText);
+        let nuevoIndex = index + direccion;
 
-        if (draggedNode && targetNode) {
-            let parent = targetNode.parentNode;
-            parent.insertBefore(draggedNode, targetNode);
-            Array.from(parent.children).forEach((el, index) => {
-                el.querySelector('.step-num').textContent = index + 1;
-            });
+        if (nuevoIndex >= 0 && nuevoIndex < items.length) {
+            let pasoActualText = items[index].dataset.stepText;
+            let pasoDestinoText = items[nuevoIndex].dataset.stepText;
+
+            // Extraer todos los textos actuales
+            let currentSteps = items.map(el => el.dataset.stepText);
+            
+            // Intercambiar posiciones
+            currentSteps[index] = pasoDestinoText;
+            currentSteps[nuevoIndex] = pasoActualText;
+
+            // Volver a renderizar la lista actualizada
+            renderizarPasosLoto(currentSteps);
         }
     }
 
