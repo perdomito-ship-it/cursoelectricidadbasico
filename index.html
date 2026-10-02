@@ -1,4 +1,6 @@
-<!DOCTYPE html>
+const GITHUB_USER = 'perdomito-ship-it';
+const GITHUB_REPO = 'cursoelectricidadbasico';
+<!DOCTYPE html>https://github.com/perdomito-ship-it
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -25,8 +27,7 @@
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
         
-        /* Pantallas */
-        #home-screen, .setup-screen, .difficulty-screen {
+        #home-screen, .difficulty-screen, .loading-screen {
             text-align: center;
             padding: 30px;
         }
@@ -142,8 +143,6 @@
             pointer-events: none;
             transition: transform 0.25s ease-in-out, z-index 0.25s;
         }
-        
-        /* Zoom flotante en Hover */
         .tool-card:hover img {
             transform: scale(2.2);
             z-index: 100;
@@ -153,7 +152,7 @@
             padding: 5px;
         }
 
-        /* Estilos específicos para el Modo Símbolos */
+        /* Estilos Símbolos */
         .symbol-workspace {
             display: flex;
             gap: 20px;
@@ -212,7 +211,7 @@
             cursor: grab;
         }
 
-        /* Estilos para el Modo Riesgo Eléctrico / LOTO por Pasos */
+        /* Estilos LOTO */
         .loto-workspace {
             display: flex;
             gap: 20px;
@@ -268,9 +267,7 @@
             align-items: center;
             justify-content: space-between;
         }
-        .step-item:active {
-            cursor: grabbing;
-        }
+        .step-item:active { cursor: grabbing; }
         .step-num {
             background: #2563eb;
             color: white;
@@ -291,7 +288,7 @@
             gap: 15px;
             flex-wrap: wrap;
         }
-        button, label.upload-btn {
+        button {
             background: #2563eb;
             color: white;
             border: none;
@@ -302,27 +299,14 @@
             cursor: pointer;
             display: inline-block;
             transition: background 0.2s;
-            text-decoration: none;
         }
-        button:hover, label.upload-btn:hover {
-            background: #1d4ed8;
-        }
-        .btn-secondary {
-            background: #64748b;
-        }
-        .btn-secondary:hover {
-            background: #475569;
-        }
-        .btn-warning {
-            background: #d97706;
-        }
-        .btn-warning:hover {
-            background: #b45309;
-        }
-        input[type="file"] {
-            display: none;
-        }
-        #results, #results-loto {
+        button:hover { background: #1d4ed8; }
+        .btn-secondary { background: #64748b; }
+        .btn-secondary:hover { background: #475569; }
+        .btn-warning { background: #d97706; }
+        .btn-warning:hover { background: #b45309; }
+        
+        #results, #results-symbols, #results-loto {
             margin-top: 20px;
             padding: 15px;
             border-radius: 6px;
@@ -337,63 +321,45 @@
 <div class="container">
     <h1>Plataforma de Entrenamiento - Electricista</h1>
 
+    <!-- PANTALLA DE CARGA AUTOMÁTICA -->
+    <div id="loading-screen" class="loading-screen">
+        <h2>Conectando con el repositorio y leyendo carpetas...</h2>
+        <p>Por favor espere un momento mientras el sistema escanea automáticamente los archivos de imágenes.</p>
+    </div>
+
     <!-- 1. HOME (MENÚ PRINCIPAL) -->
-    <div id="home-screen">
+    <div id="home-screen" style="display: none;">
         <h2>Selecciona el módulo de aprendizaje</h2>
-        <p>Elige la categoría que deseas entrenar hoy:</p>
+        <p>El sistema ha escaneado automáticamente las carpetas de tu repositorio:</p>
         
         <div class="menu-grid">
             <div class="menu-card">
                 <h3>Herramientas</h3>
-                <p>Reconocimiento visual de pinzas, multímetros y accesorios en el bolso.</p>
-                <button onclick="irASetup('tools')">Entrenar Herramientas</button>
+                <p id="count-tools">Cargando...</p>
+                <button onclick="seleccionarModo('herramientas')">Entrenar Herramientas</button>
             </div>
 
             <div class="menu-card">
                 <h3>Materiales</h3>
-                <p>Identificación de canalizaciones, conductores, abrazaderas y componentes.</p>
-                <button onclick="irASetup('materials')">Entrenar Materiales</button>
+                <p id="count-materials">Cargando...</p>
+                <button onclick="seleccionarModo('materiales')">Entrenar Materiales</button>
             </div>
 
             <div class="menu-card">
                 <h3>Símbolos de Planos</h3>
-                <p>Asociación correcta de símbolos eléctricos con su respectivo nombre técnico.</p>
-                <button onclick="irASetup('symbols')">Entrenar Símbolos</button>
+                <p id="count-symbols">Cargando...</p>
+                <button onclick="seleccionarModo('simbolos')">Entrenar Símbolos</button>
             </div>
 
             <div class="menu-card" style="border-color: #2563eb; background: #eff6ff;">
                 <h3>Riesgo Eléctrico / LOTO</h3>
-                <p>Simulador secuencial de seguridad para intervenir elementos en campo.</p>
-                <button onclick="iniciarSetupLoto()">Entrenar Seguridad</button>
+                <p id="count-loto">Cargando...</p>
+                <button onclick="iniciarLoto()">Entrenar Seguridad</button>
             </div>
         </div>
     </div>
 
-    <!-- 2. SETUP CARPETA (GENERAL) -->
-    <div id="setup-screen" class="setup-screen" style="display: none;">
-        <h2 id="setup-title">Cargar Carpeta</h2>
-        <p>Selecciona la carpeta local de imágenes correspondiente:</p>
-        <label class="upload-btn">
-            📂 Seleccionar carpeta
-            <input type="file" id="folderInput" webkitdirectory directory multiple onchange="cargarCarpeta(event)">
-        </label>
-        <br><br>
-        <button class="btn-secondary" onclick="volverHome()">← Volver al Menú</button>
-    </div>
-
-    <!-- 2.2 SETUP CARPETA LOTO (EXTRA DE IMÁGENES DE INTERÉS) -->
-    <div id="setup-loto-screen" class="setup-screen" style="display: none;">
-        <h2>Cargar Carpeta de Imágenes de Interés (LOTO)</h2>
-        <p>Selecciona la carpeta que contiene las imágenes de referencia (ej: tomacorriente, tablero residencial, etc.):</p>
-        <label class="upload-btn">
-            📂 Seleccionar carpeta de imágenes LOTO
-            <input type="file" webkitdirectory directory multiple onchange="cargarCarpetaLoto(event)">
-        </label>
-        <br><br>
-        <button class="btn-secondary" onclick="volverHome()">← Volver al Menú</button>
-    </div>
-
-    <!-- 3. SELECCIÓN DE DIFICULTAD -->
+    <!-- 2. SELECCIÓN DE DIFICULTAD -->
     <div id="difficulty-screen" class="difficulty-screen" style="display: none;">
         <h2>Selecciona el Nivel de Dificultad</h2>
         <p>Elige cuántos elementos requerirá esta prueba:</p>
@@ -416,10 +382,10 @@
             </div>
         </div>
         <br>
-        <button class="btn-secondary" onclick="irASetup(activeMode)">← Cambiar Carpeta</button>
+        <button class="btn-secondary" onclick="volverHome()">← Volver al Menú</button>
     </div>
 
-    <!-- 4. PANTALLA DE JUEGO (HERRAMIENTAS / MATERIALES) -->
+    <!-- 3. PANTALLA DE JUEGO ESTÁNDAR -->
     <div id="game-screen-standard" class="game-screen">
         <h2 id="game-title-std">Entrenador</h2>
         <div class="instructions" id="game-instr-std">Objetivo: Identifica los elementos y arrastrarlos al bolso.</div>
@@ -450,7 +416,7 @@
         <div id="results"></div>
     </div>
 
-    <!-- 5. PANTALLA DE JUEGO ESPECÍFICA PARA SÍMBOLOS -->
+    <!-- 4. PANTALLA DE JUEGO SÍMBOLOS -->
     <div id="game-screen-symbols" class="game-screen">
         <h2>Entrenador: Símbolos de Planos Eléctricos</h2>
         <div class="instructions">
@@ -478,29 +444,21 @@
         <div id="results-symbols"></div>
     </div>
 
-    <!-- 6. PANTALLA DE JUEGO RIESGO ELÉCTRICO / LOTO POR ESCENARIOS -->
+    <!-- 5. PANTALLA DE JUEGO LOTO -->
     <div id="game-screen-loto" class="game-screen">
         <h2 id="loto-scenario-title">Simulador de Riesgo Eléctrico y LOTO</h2>
-        <div class="instructions" id="loto-scenario-desc">
-            Ordena los pasos de seguridad arrastrándolos verticalmente en la secuencia correcta antes de intervenir el equipo.
-        </div>
+        <div class="instructions">Ordena los pasos de seguridad arrastrándolos verticalmente en la secuencia correcta.</div>
 
         <div class="loto-workspace">
-            <!-- Panel Visual de la Imagen de Interés -->
             <div class="loto-visual-panel">
                 <div class="section-title">Elemento de Interés en Obra</div>
                 <p id="loto-element-name" style="font-weight: bold; color: #2563eb; margin: 5px 0;"></p>
-                <div id="loto-img-container">
-                    <!-- Se carga la imagen correspondiente al escenario -->
-                </div>
+                <div id="loto-img-container"></div>
             </div>
 
-            <!-- Panel de Pasos Desordenados (Arrastrables) -->
             <div class="loto-steps-panel">
                 <div class="section-title">Pasos de Seguridad (Ordena de 1 al N)</div>
-                <div class="sortable-step-list" id="loto-steps-list" ondragover="allowDrop(event)">
-                    <!-- Se generan dinámicamente -->
-                </div>
+                <div class="sortable-step-list" id="loto-steps-list" ondragover="allowDrop(event)"></div>
             </div>
         </div>
 
@@ -514,22 +472,34 @@
 </div>
 
 <script>
+    /* =========================================================================
+       CONFIGURA AQUÍ TU USUARIO Y REPOSITORIO DE GITHUB
+       ========================================================================= */
+    const GITHUB_USER = 'tu_usuario_de_github'; // <--- CAMBIA ESTO
+    const GITHUB_REPO = 'nombre_de_tu_repositorio'; // <--- CAMBIA ESTO
+
+    let repoData = {
+        herramientas: [],
+        materiales: [],
+        simbolos: [],
+        'seguridad electrica': []
+    };
+
     let masterData = [];
     let currentRequired = [];
     let activeMode = '';
     let selectedDifficulty = 5;
 
-    // Estructura de Escenarios LOTO (Riesgo Eléctrico)
+    // Escenarios LOTO
     const lotoScenarios = [
         {
             id: 1,
             title: "Escenario 1 de 4: Riesgo eléctrico al cambiar un Tomacorriente",
             imageKey: "tomacorriente",
             steps: [
-                "Medir tensión en el tomacorriente con un probador de tensión sin contacto, uno con contacto o medir voltaje con un tester",
-		"Consultar con el dueño del área donde está el tablero e identificar el breaker que apaga el tomacorriente",
+                "Consultar con el dueño del área donde está el tablero e identificar el breaker que apaga el tomacorriente",
                 "Apagar el breaker",
-                
+                "Medir tensión en el tomacorriente con un probador de tensión sin contacto, uno con contacto o medir voltaje con un tester",
                 "Vuelve al tomacorriente desarma la tapa",
                 "Vuelve a medir tensión y confirma que no exista tensión",
                 "Realiza el trabajo"
@@ -539,10 +509,10 @@
             id: 2,
             title: "Escenario 2 de 4: Riesgo eléctrico al cambiar un Apagador",
             imageKey: "apagador",
-            steps: [                
-		"Levantar la tapa del apagador y con un probador de tensión sin contacto, uno con contacto o medir voltaje con un tester",
+            steps: [
                 "Consultar con el dueño del área donde está el tablero e identificar el breaker que apaga el tomacorriente",
                 "Apagar el breaker",
+                "Levantar la tapa del apagador y con un probador de tensión sin contacto, uno con contacto o medir voltaje con un tester",
                 "Vuelve al apagador y vuelve a medir tensión y confirma que no exista tensión",
                 "Realiza el trabajo"
             ]
@@ -552,9 +522,9 @@
             title: "Escenario 3 de 4: Riesgo eléctrico al cambiar una Lámpara",
             imageKey: "lampara",
             steps: [
-                "Medir tensión en la lampara con un probador de tensión sin contacto, uno con contacto o medir voltaje con un tester",
-		"Consultar con el dueño del área donde está el tablero e identificar el breaker que apaga la lampara",
+                "Consultar con el dueño del área donde está el tablero e identificar el breaker que apaga la lampara",
                 "Apagar el breaker",
+                "Medir tensión en la lampara con un probador de tensión sin contacto, uno con contacto o medir voltaje con un tester",
                 "Vuelve al lampara desarma la tapa",
                 "Vuelve a medir tensión y confirma que no exista tensión",
                 "Realiza el trabajo"
@@ -565,94 +535,111 @@
             title: "Escenario 4 de 4: Riesgo eléctrico al cambiar un Breaker",
             imageKey: "tablero residencial",
             steps: [
+                "Consultar con el dueño del área donde está el tablero alimentador del breaker e identificar el breaker que apaga el tomacorriente",
+                "Apagar el breaker que alimenta el tablero",
                 "Medir tensión en el breaker y en las barras del tablero con un probador de tensión sin contacto, uno con contacto o medir voltaje con un tester",
-		"Consultar con el dueño del área donde está el tablero alimentador del breaker e identificar el breaker que apaga el tomacorriente",
-                "Apagar el breaker que alimenta el tablero", 
                 "Vuelve al tablero y vuelve a medir tensión y confirma que no exista tensión",
                 "Realiza el trabajo"
             ]
         }
     ];
-
     let currentLotoIndex = 0;
-    let lotoImagesMap = {}; // Almacena las rutas URL de las imágenes subidas por el usuario
 
-    function irASetup(mode) {
-        activeMode = mode;
-        document.getElementById('home-screen').style.display = 'none';
-        document.getElementById('difficulty-screen').style.display = 'none';
-        document.getElementById('setup-loto-screen').style.display = 'none';
-        document.getElementById('game-screen-standard').style.display = 'none';
-        document.getElementById('game-screen-symbols').style.display = 'none';
-        document.getElementById('game-screen-loto').style.display = 'none';
-        document.getElementById('setup-screen').style.display = 'block';
+    // ESCANEO AUTOMÁTICO DE CARPETAS MEDIANTE LA API DE GITHUB AL CARGAR LA PÁGINA
+    window.onload = async function() {
+        try {
+            let response = await fetch(`https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/git/trees/main?recursive=1`);
+            if (!response.ok) {
+                // Intento alternativo con rama 'master' si 'main' falla
+                response = await fetch(`https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/git/trees/master?recursive=1`);
+            }
+            const data = await response.json();
 
-        if (mode === 'tools') {
-            document.getElementById('setup-title').textContent = 'Cargar Carpeta de Herramientas';
-        } else if (mode === 'materials') {
-            document.getElementById('setup-title').textContent = 'Cargar Carpeta de Materiales';
-        } else {
-            document.getElementById('setup-title').textContent = 'Cargar Carpeta de Símbolos de Planos';
+            if (data.tree) {
+                data.tree.forEach(item => {
+                    if (item.type === 'blob') {
+                        let partes = item.path.toLowerCase().split('/');
+                        if (partes.length >= 2) {
+                            let carpeta = partes[0].trim();
+                            let fileName = partes[partes.length - 1];
+                            
+                            // Filtrar solo imágenes válidas
+                            if (['png', 'jpg', 'jpeg', 'webp'].some(ext => fileName.endsWith(ext))) {
+                                if (repoData[carpeta]) {
+                                    let nombreLimpio = fileName.substring(0, fileName.lastIndexOf('.'))
+                                        .replace(/[-_]/g, ' ')
+                                        .replace(/\b\w/g, l => l.toUpperCase());
+
+                                    repoData[carpeta].push({
+                                        name: nombreLimpio,
+                                        file: fileName,
+                                        path: item.path
+                                    });
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Actualizar contadores en el menú
+            document.getElementById('count-tools').textContent = `${repoData.herramientas.length} elementos detectados`;
+            document.getElementById('count-materials').textContent = `${repoData.materiales.length} elementos detectados`;
+            document.getElementById('count-symbols').textContent = `${repoData.simbolos.length} elementos detectados`;
+            document.getElementById('count-loto').textContent = `${repoData['seguridad electrica'].length} escenarios detectados`;
+
+            document.getElementById('loading-screen').style.display = 'none';
+            document.getElementById('home-screen').style.display = 'block';
+
+        } catch (error) {
+            console.error("Error al escanear el repositorio:", error);
+            document.getElementById('loading-screen').innerHTML = `
+                <h3 style="color: #991b1b;">Error al conectar con la API de GitHub</h3>
+                <p>Asegúrate de haber configurado correctamente tu usuario y nombre de repositorio en el código JavaScript (variables GITHUB_USER y GITHUB_REPO).</p>
+            `;
         }
+    };
+
+    function seleccionarModo(mode) {
+        activeMode = mode;
+        if (repoData[mode].length === 0) {
+            alert(`No se encontraron imágenes en la carpeta '${mode}' de tu repositorio. Verifica que la carpeta exista y contenga imágenes.`);
+            return;
+        }
+        document.getElementById('home-screen').style.display = 'none';
+        document.getElementById('difficulty-screen').style.display = 'block';
     }
 
-    function iniciarSetupLoto() {
+    function iniciarLoto() {
+        if (repoData['seguridad electrica'].length === 0) {
+            alert("No se encontraron imágenes en la carpeta 'seguridad electrica'. Verifica el nombre de tu carpeta en GitHub.");
+            return;
+        }
         document.getElementById('home-screen').style.display = 'none';
-        document.getElementById('setup-loto-screen').style.display = 'block';
+        document.getElementById('game-screen-loto').style.display = 'block';
         currentLotoIndex = 0;
+        cargarEscenarioLoto();
     }
 
     function volverHome() {
         document.getElementById('home-screen').style.display = 'block';
-        document.getElementById('setup-screen').style.display = 'none';
-        document.getElementById('setup-loto-screen').style.display = 'none';
         document.getElementById('difficulty-screen').style.display = 'none';
         document.getElementById('game-screen-standard').style.display = 'none';
         document.getElementById('game-screen-symbols').style.display = 'none';
         document.getElementById('game-screen-loto').style.display = 'none';
-    }
-
-    function cargarCarpeta(event) {
-        const files = event.target.files;
-        masterData = [];
-        for (let i = 0; i < files.length; i++) {
-            let file = files[i];
-            if (file.type.startsWith('image/')) {
-                let nombreLimpio = file.name
-                    .substring(0, file.name.lastIndexOf('.'))
-                    .replace(/[-_]/g, ' ')
-                    .replace(/\b\w/g, l => l.toUpperCase());
-                masterData.push({ id: 'item_' + i, name: nombreLimpio, img: URL.createObjectURL(file) });
-            }
-        }
-        if (masterData.length === 0) {
-            alert("No se encontraron imágenes válidas.");
-            return;
-        }
-        document.getElementById('setup-screen').style.display = 'none';
-        document.getElementById('difficulty-screen').style.display = 'block';
-    }
-
-    function cargarCarpetaLoto(event) {
-        const files = event.target.files;
-        lotoImagesMap = {};
-        for (let i = 0; i < files.length; i++) {
-            let file = files[i];
-            if (file.type.startsWith('image/')) {
-                // Limpiar nombre quitando extensión y pasando a minúsculas exactas para matchear con los escenarios
-                let keyName = file.name.substring(0, file.name.lastIndexOf('.')).toLowerCase().replace(/[-_]/g, ' ').trim();
-                lotoImagesMap[keyName] = URL.createObjectURL(file);
-            }
-        }
-        document.getElementById('setup-loto-screen').style.display = 'none';
-        document.getElementById('game-screen-loto').style.display = 'block';
-        cargarEscenarioLoto();
     }
 
     function iniciarTestConDificultad(cantidad) {
         selectedDifficulty = cantidad;
         document.getElementById('difficulty-screen').style.display = 'none';
-        if (activeMode === 'symbols') {
+
+        masterData = repoData[activeMode].map((item, index) => ({
+            id: 'item_' + index,
+            name: item.name,
+            img: `./${item.path}`
+        }));
+
+        if (activeMode === 'simbolos') {
             document.getElementById('game-screen-symbols').style.display = 'block';
             configurarJuegoSymbols();
         } else {
@@ -662,122 +649,22 @@
     }
 
     function resetearTest() {
-        if (activeMode === 'symbols') configurarJuegoSymbols();
+        if (activeMode === 'simbolos') configurarJuegoSymbols();
         else configurarJuegoStandard();
     }
 
-    /* --- LÓGICA MODO LOTO (RIESGO ELÉCTRICO) --- */
-    function cargarEscenarioLoto() {
-        const scenario = lotoScenarios[currentLotoIndex];
-        document.getElementById('loto-scenario-title').textContent = scenario.title;
-        document.getElementById('loto-element-name').textContent = `Elemento clave: ${scenario.imageKey.toUpperCase()}`;
-        
-        // Mostrar imagen de interés si existe en la carpeta cargada
-        const imgContainer = document.getElementById('loto-img-container');
-        imgContainer.innerHTML = '';
-        let matchedImgUrl = lotoImagesMap[scenario.imageKey] || lotoImagesMap[scenario.imageKey.replace(/\s+/g, '')];
-        
-        if (matchedImgUrl) {
-            imgContainer.innerHTML = `<img src="${matchedImgUrl}" alt="${scenario.imageKey}">`;
-        } else {
-            imgContainer.innerHTML = `<p style="color: #d97706; font-size: 0.9em; padding: 20px;">[Imagen '${scenario.imageKey}' no encontrada en la carpeta cargada. Asegúrate de incluirla con ese nombre exacto].</p>`;
-        }
-
-        // Desordenar los pasos para que el alumno los organice
-        let shuffledSteps = [...scenario.steps].sort(() => 0.5 - Math.random());
-        const listContainer = document.getElementById('loto-steps-list');
-        listContainer.innerHTML = '';
-
-        shuffledSteps.forEach((stepText, idx) => {
-            let div = document.createElement('div');
-            div.className = 'step-item';
-            div.draggable = true;
-            div.dataset.stepText = stepText;
-            div.innerHTML = `<span><span class="step-num">${idx + 1}</span>${stepText}</span> ↕️`;
-            
-            // Eventos de arrastre para reordenar verticalmente
-            div.ondragstart = (e) => { e.dataTransfer.setData('text/plain', stepText); };
-            div.ondragover = (e) => { e.preventDefault(); };
-            div.ondrop = (e) => {
-                e.preventDefault();
-                let draggedText = e.dataTransfer.getData('text/plain');
-                let targetText = div.dataset.stepText;
-                reordenarPasosLoto(draggedText, targetText);
-            };
-
-            listContainer.appendChild(div);
-        });
-
-        document.getElementById('results-loto').style.display = 'none';
-    }
-
-    function reordenarPasosLoto(draggedText, targetText) {
-        const listContainer = document.getElementById('loto-steps-list');
-        let items = Array.from(listContainer.children);
-        let draggedNode = items.find(el => el.dataset.stepText === draggedText);
-        let targetNode = items.find(el => el.dataset.stepText === targetText);
-
-        if (draggedNode && targetNode) {
-            let parent = targetNode.parentNode;
-            parent.insertBefore(draggedNode, targetNode);
-            // Actualizar numeración visual
-            Array.from(parent.children).forEach((el, index) => {
-                el.querySelector('.step-num').textContent = index + 1;
-            });
-        }
-    }
-
-    function verificarEscenarioLoto() {
-        const scenario = lotoScenarios[currentLotoIndex];
-        const listContainer = document.getElementById('loto-steps-list');
-        let currentOrder = Array.from(listContainer.children).map(el => el.dataset.stepText);
-
-        let esCorrecto = true;
-        for (let i = 0; i < scenario.steps.length; i++) {
-            if (currentOrder[i] !== scenario.steps[i]) {
-                esCorrecto = false;
-                break;
-            }
-        }
-
-        const resultsDiv = document.getElementById('results-loto');
-        resultsDiv.style.display = 'block';
-
-        if (esCorrecto) {
-            currentLotoIndex++;
-            if (currentLotoIndex < lotoScenarios.length) {
-                resultsDiv.className = 'success';
-                resultsDiv.innerHTML = `<strong>¡Secuencia correcta!</strong> Avanzando al siguiente escenario en 2 segundos...`;
-                setTimeout(() => {
-                    cargarEscenarioLoto();
-                }, 2000);
-            } else {
-                resultsDiv.className = 'success';
-                resultsDiv.innerHTML = `<strong>¡Felicitaciones! Has completado todos los escenarios de Riesgo Eléctrico y LOTO con éxito absoluto.</strong>`;
-                setTimeout(() => {
-                    volverHome();
-                }, 4000);
-            }
-        } else {
-            resultsDiv.className = 'warning-box';
-            resultsDiv.innerHTML = `<strong>Secuencia incorrecta.</strong> Revisa el orden de los pasos de seguridad antes de intervenir el equipo (recuerda verificar desenergización y aislamiento antes de trabajar).`;
-        }
-    }
-
-    /* --- MODO ESTÁNDAR (Herramientas / Materiales) --- */
+    /* --- MODO ESTÁNDAR --- */
     function configurarJuegoStandard() {
-        if (activeMode === 'tools') {
+        if (activeMode === 'herramientas') {
             document.getElementById('game-title-std').textContent = "Entrenador: Herramientas del Instalador";
             document.getElementById('target-title-std').textContent = "Herramientas que debes incluir en el bolso hoy:";
             document.getElementById('pool-title-std').textContent = "Banco de Herramientas";
             document.getElementById('bag-title-std').textContent = "🎒 Bolso del Instalador";
-            document.getElementById('btn-evaluar-std').textContent = "¡Listo, evaluar bolso!";
-        } else {
+        } else if (activeMode === 'materiales') {
             document.getElementById('game-title-std').textContent = "Entrenador: Materiales Eléctricos";
             document.getElementById('target-title-std').textContent = "Materiales que debes reunir hoy:";
             document.getElementById('pool-title-std').textContent = "Banco de Materiales";
             document.getElementById('bag-title-std').textContent = "📦 Materiales Seleccionados";
-            document.getElementById('btn-evaluar-std').textContent = "¡Listo, evaluar selección!";
         }
 
         let poolShuffled = [...masterData].sort(() => 0.5 - Math.random());
@@ -936,6 +823,97 @@
         } else {
             resDiv.className = 'warning-box';
             resDiv.innerHTML = `<strong>Acierto del ${puntaje}%</strong><br>Correctos: ${correctos} | Vacíos: ${vacios} | Erróneos: ${incorrectos}`;
+        }
+    }
+
+    /* --- MODO LOTO --- */
+    function cargarEscenarioLoto() {
+        const scenario = lotoScenarios[currentLotoIndex];
+        document.getElementById('loto-scenario-title').textContent = scenario.title;
+        document.getElementById('loto-element-name').textContent = `Elemento clave: ${scenario.imageKey.toUpperCase()}`;
+        
+        const imgContainer = document.getElementById('loto-img-container');
+        
+        // Buscar la imagen correspondiente dentro de la carpeta 'seguridad electrica' escaneada
+        let foundImg = repoData['seguridad electrica'].find(item => item.file.toLowerCase().includes(scenario.imageKey));
+        
+        if (foundImg) {
+            imgContainer.innerHTML = `<img src="./${foundImg.path}" alt="${scenario.imageKey}">`;
+        } else {
+            imgContainer.innerHTML = `<p style="color: #d97706; font-size: 0.9em;">[Imagen '${scenario.imageKey}' no encontrada en la carpeta 'seguridad electrica'].</p>`;
+        }
+
+        let shuffledSteps = [...scenario.steps].sort(() => 0.5 - Math.random());
+        const listContainer = document.getElementById('loto-steps-list');
+        listContainer.innerHTML = '';
+
+        shuffledSteps.forEach((stepText, idx) => {
+            let div = document.createElement('div');
+            div.className = 'step-item';
+            div.draggable = true;
+            div.dataset.stepText = stepText;
+            div.innerHTML = `<span><span class="step-num">${idx + 1}</span>${stepText}</span> ↕️`;
+            
+            div.ondragstart = (e) => { e.dataTransfer.setData('text/plain', stepText); };
+            div.ondragover = (e) => { e.preventDefault(); };
+            div.ondrop = (e) => {
+                e.preventDefault();
+                let draggedText = e.dataTransfer.getData('text/plain');
+                let targetText = div.dataset.stepText;
+                reordenarPasosLoto(draggedText, targetText);
+            };
+
+            listContainer.appendChild(div);
+        });
+
+        document.getElementById('results-loto').style.display = 'none';
+    }
+
+    function reordenarPasosLoto(draggedText, targetText) {
+        const listContainer = document.getElementById('loto-steps-list');
+        let items = Array.from(listContainer.children);
+        let draggedNode = items.find(el => el.dataset.stepText === draggedText);
+        let targetNode = items.find(el => el.dataset.stepText === targetText);
+
+        if (draggedNode && targetNode) {
+            let parent = targetNode.parentNode;
+            parent.insertBefore(draggedNode, targetNode);
+            Array.from(parent.children).forEach((el, index) => {
+                el.querySelector('.step-num').textContent = index + 1;
+            });
+        }
+    }
+
+    function verificarEscenarioLoto() {
+        const scenario = lotoScenarios[currentLotoIndex];
+        const listContainer = document.getElementById('loto-steps-list');
+        let currentOrder = Array.from(listContainer.children).map(el => el.dataset.stepText);
+
+        let esCorrecto = true;
+        for (let i = 0; i < scenario.steps.length; i++) {
+            if (currentOrder[i] !== scenario.steps[i]) {
+                esCorrecto = false;
+                break;
+            }
+        }
+
+        const resultsDiv = document.getElementById('results-loto');
+        resultsDiv.style.display = 'block';
+
+        if (esCorrecto) {
+            currentLotoIndex++;
+            if (currentLotoIndex < lotoScenarios.length) {
+                resultsDiv.className = 'success';
+                resultsDiv.innerHTML = `<strong>¡Secuencia correcta!</strong> Avanzando al siguiente escenario...`;
+                setTimeout(() => { cargarEscenarioLoto(); }, 2000);
+            } else {
+                resultsDiv.className = 'success';
+                resultsDiv.innerHTML = `<strong>¡Felicitaciones! Has completado todos los escenarios de Riesgo Eléctrico y LOTO.</strong>`;
+                setTimeout(() => { volverHome(); }, 4000);
+            }
+        } else {
+            resultsDiv.className = 'warning-box';
+            resultsDiv.innerHTML = `<strong>Secuencia incorrecta.</strong> Revisa el orden lógico de los pasos de seguridad antes de intervenir el equipo.`;
         }
     }
 
