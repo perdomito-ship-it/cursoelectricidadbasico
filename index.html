@@ -1,6 +1,4 @@
-const GITHUB_USER = 'perdomito-ship-it';
-const GITHUB_REPO = 'cursoelectricidadbasico';
-<!DOCTYPE html>https://github.com/perdomito-ship-it
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -27,7 +25,7 @@ const GITHUB_REPO = 'cursoelectricidadbasico';
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
         
-        #home-screen, .difficulty-screen, .loading-screen {
+        #home-screen, .difficulty-screen {
             text-align: center;
             padding: 30px;
         }
@@ -321,39 +319,33 @@ const GITHUB_REPO = 'cursoelectricidadbasico';
 <div class="container">
     <h1>Plataforma de Entrenamiento - Electricista</h1>
 
-    <!-- PANTALLA DE CARGA AUTOMÁTICA -->
-    <div id="loading-screen" class="loading-screen">
-        <h2>Conectando con el repositorio y leyendo carpetas...</h2>
-        <p>Por favor espere un momento mientras el sistema escanea automáticamente los archivos de imágenes.</p>
-    </div>
-
     <!-- 1. HOME (MENÚ PRINCIPAL) -->
-    <div id="home-screen" style="display: none;">
+    <div id="home-screen">
         <h2>Selecciona el módulo de aprendizaje</h2>
-        <p>El sistema ha escaneado automáticamente las carpetas de tu repositorio:</p>
+        <p>Elige la categoría que deseas entrenar desde tu repositorio:</p>
         
         <div class="menu-grid">
             <div class="menu-card">
                 <h3>Herramientas</h3>
-                <p id="count-tools">Cargando...</p>
+                <p>Reconocimiento visual de pinzas y multímetros.</p>
                 <button onclick="seleccionarModo('herramientas')">Entrenar Herramientas</button>
             </div>
 
             <div class="menu-card">
                 <h3>Materiales</h3>
-                <p id="count-materials">Cargando...</p>
+                <p>Identificación de canalizaciones, cables y breakers.</p>
                 <button onclick="seleccionarModo('materiales')">Entrenar Materiales</button>
             </div>
 
             <div class="menu-card">
                 <h3>Símbolos de Planos</h3>
-                <p id="count-symbols">Cargando...</p>
+                <p>Asociación de símbolos eléctricos con su nombre técnico.</p>
                 <button onclick="seleccionarModo('simbolos')">Entrenar Símbolos</button>
             </div>
 
             <div class="menu-card" style="border-color: #2563eb; background: #eff6ff;">
                 <h3>Riesgo Eléctrico / LOTO</h3>
-                <p id="count-loto">Cargando...</p>
+                <p>Simulador secuencial de seguridad en campo.</p>
                 <button onclick="iniciarLoto()">Entrenar Seguridad</button>
             </div>
         </div>
@@ -473,33 +465,42 @@ const GITHUB_REPO = 'cursoelectricidadbasico';
 
 <script>
     /* =========================================================================
-       CONFIGURA AQUÍ TU USUARIO Y REPOSITORIO DE GITHUB
+       CONFIGURACIÓN DE CARPETAS DEL REPOSITORIO GITHUB
        ========================================================================= */
-    const GITHUB_USER = 'tu_usuario_de_github'; // <--- CAMBIA ESTO
-    const GITHUB_REPO = 'nombre_de_tu_repositorio'; // <--- CAMBIA ESTO
-
-    let repoData = {
-        herramientas: [],
-        materiales: [],
-        simbolos: [],
-        'seguridad electrica': []
+    const repoFiles = {
+        herramientas: [
+            "pinza.png", "multimetro.png", "pelacables.png", "destornillador_plano.png", 
+            "destornillador_estrella.png", "cinta_metrica.png", "guia_pasacables.png", 
+            "pinza_amperimetrica.png", "dobladora.png", "cutter.png"
+        ],
+        materiales: [
+            "tuberia_emt.png", "tuberia_pvc.png", "unistrut.png", "abrazadera_morocha.png", 
+            "breaker.png", "caja_octagonal.png", "conector_emt.png", "cinta_aislante.png"
+        ],
+        simbolos: [
+            "interruptor_simple.png", "tomacorriente.png", "lampara.png", 
+            "tablero.png", "fuerza.png", "three_way.png"
+        ],
+        "seguridad electrica": [
+            "tomacorriente.png", "apagador.png", "lampara.png", "tablero residencial.png"
+        ]
     };
 
+    let repoData = { herramientas: [], materiales: [], simbolos: [], "seguridad electrica": [] };
     let masterData = [];
     let currentRequired = [];
     let activeMode = '';
     let selectedDifficulty = 5;
 
-    // Escenarios LOTO
     const lotoScenarios = [
         {
             id: 1,
             title: "Escenario 1 de 4: Riesgo eléctrico al cambiar un Tomacorriente",
-            imageKey: "tomacorriente",
+            imageKey: "tomacorriente.png",
             steps: [
-                "Consultar con el dueño del área donde está el tablero e identificar el breaker que apaga el tomacorriente",
-                "Apagar el breaker",
                 "Medir tensión en el tomacorriente con un probador de tensión sin contacto, uno con contacto o medir voltaje con un tester",
+		        "Consultar con el dueño del área donde está el tablero e identificar el breaker que apaga el tomacorriente",
+                "Apagar el breaker",
                 "Vuelve al tomacorriente desarma la tapa",
                 "Vuelve a medir tensión y confirma que no exista tensión",
                 "Realiza el trabajo"
@@ -508,11 +509,11 @@ const GITHUB_REPO = 'cursoelectricidadbasico';
         {
             id: 2,
             title: "Escenario 2 de 4: Riesgo eléctrico al cambiar un Apagador",
-            imageKey: "apagador",
-            steps: [
+            imageKey: "apagador.png",
+            steps: [               
+		        "Levantar la tapa del apagador y con un probador de tensión sin contacto, uno con contacto o medir voltaje con un tester",
                 "Consultar con el dueño del área donde está el tablero e identificar el breaker que apaga el tomacorriente",
                 "Apagar el breaker",
-                "Levantar la tapa del apagador y con un probador de tensión sin contacto, uno con contacto o medir voltaje con un tester",
                 "Vuelve al apagador y vuelve a medir tensión y confirma que no exista tensión",
                 "Realiza el trabajo"
             ]
@@ -520,11 +521,11 @@ const GITHUB_REPO = 'cursoelectricidadbasico';
         {
             id: 3,
             title: "Escenario 3 de 4: Riesgo eléctrico al cambiar una Lámpara",
-            imageKey: "lampara",
+            imageKey: "lampara.png",
             steps: [
-                "Consultar con el dueño del área donde está el tablero e identificar el breaker que apaga la lampara",
-                "Apagar el breaker",
                 "Medir tensión en la lampara con un probador de tensión sin contacto, uno con contacto o medir voltaje con un tester",
+		"Consultar con el dueño del área donde está el tablero e identificar el breaker que apaga la lampara",
+                "Apagar el breaker",
                 "Vuelve al lampara desarma la tapa",
                 "Vuelve a medir tensión y confirma que no exista tensión",
                 "Realiza el trabajo"
@@ -533,11 +534,11 @@ const GITHUB_REPO = 'cursoelectricidadbasico';
         {
             id: 4,
             title: "Escenario 4 de 4: Riesgo eléctrico al cambiar un Breaker",
-            imageKey: "tablero residencial",
+            imageKey: "tablero residencial.png",
             steps: [
-                "Consultar con el dueño del área donde está el tablero alimentador del breaker e identificar el breaker que apaga el tomacorriente",
-                "Apagar el breaker que alimenta el tablero",
                 "Medir tensión en el breaker y en las barras del tablero con un probador de tensión sin contacto, uno con contacto o medir voltaje con un tester",
+		"Consultar con el dueño del área donde está el tablero alimentador del breaker e identificar el breaker que apaga el tomacorriente",
+                "Apagar el breaker que alimenta el tablero", 
                 "Vuelve al tablero y vuelve a medir tensión y confirma que no exista tensión",
                 "Realiza el trabajo"
             ]
@@ -545,76 +546,30 @@ const GITHUB_REPO = 'cursoelectricidadbasico';
     ];
     let currentLotoIndex = 0;
 
-    // ESCANEO AUTOMÁTICO DE CARPETAS MEDIANTE LA API DE GITHUB AL CARGAR LA PÁGINA
-    window.onload = async function() {
-        try {
-            let response = await fetch(`https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/git/trees/main?recursive=1`);
-            if (!response.ok) {
-                // Intento alternativo con rama 'master' si 'main' falla
-                response = await fetch(`https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/git/trees/master?recursive=1`);
-            }
-            const data = await response.json();
-
-            if (data.tree) {
-                data.tree.forEach(item => {
-                    if (item.type === 'blob') {
-                        let partes = item.path.toLowerCase().split('/');
-                        if (partes.length >= 2) {
-                            let carpeta = partes[0].trim();
-                            let fileName = partes[partes.length - 1];
-                            
-                            // Filtrar solo imágenes válidas
-                            if (['png', 'jpg', 'jpeg', 'webp'].some(ext => fileName.endsWith(ext))) {
-                                if (repoData[carpeta]) {
-                                    let nombreLimpio = fileName.substring(0, fileName.lastIndexOf('.'))
-                                        .replace(/[-_]/g, ' ')
-                                        .replace(/\b\w/g, l => l.toUpperCase());
-
-                                    repoData[carpeta].push({
-                                        name: nombreLimpio,
-                                        file: fileName,
-                                        path: item.path
-                                    });
-                                }
-                            }
-                        }
-                    }
-                });
-            }
-
-            // Actualizar contadores en el menú
-            document.getElementById('count-tools').textContent = `${repoData.herramientas.length} elementos detectados`;
-            document.getElementById('count-materials').textContent = `${repoData.materiales.length} elementos detectados`;
-            document.getElementById('count-symbols').textContent = `${repoData.simbolos.length} elementos detectados`;
-            document.getElementById('count-loto').textContent = `${repoData['seguridad electrica'].length} escenarios detectados`;
-
-            document.getElementById('loading-screen').style.display = 'none';
-            document.getElementById('home-screen').style.display = 'block';
-
-        } catch (error) {
-            console.error("Error al escanear el repositorio:", error);
-            document.getElementById('loading-screen').innerHTML = `
-                <h3 style="color: #991b1b;">Error al conectar con la API de GitHub</h3>
-                <p>Asegúrate de haber configurado correctamente tu usuario y nombre de repositorio en el código JavaScript (variables GITHUB_USER y GITHUB_REPO).</p>
-            `;
+    // Inicializar datos cargando las rutas relativas directamente
+    window.onload = function() {
+        for (let carpeta in repoFiles) {
+            repoData[carpeta] = repoFiles[carpeta].map((fileName, index) => {
+                let nombreLimpio = fileName.substring(0, fileName.lastIndexOf('.'))
+                    .replace(/[-_]/g, ' ')
+                    .replace(/\b\w/g, l => l.toUpperCase());
+                return {
+                    id: 'item_' + index,
+                    name: nombreLimpio,
+                    file: fileName,
+                    path: `${carpeta}/${fileName}`
+                };
+            });
         }
     };
 
     function seleccionarModo(mode) {
         activeMode = mode;
-        if (repoData[mode].length === 0) {
-            alert(`No se encontraron imágenes en la carpeta '${mode}' de tu repositorio. Verifica que la carpeta exista y contenga imágenes.`);
-            return;
-        }
         document.getElementById('home-screen').style.display = 'none';
         document.getElementById('difficulty-screen').style.display = 'block';
     }
 
     function iniciarLoto() {
-        if (repoData['seguridad electrica'].length === 0) {
-            alert("No se encontraron imágenes en la carpeta 'seguridad electrica'. Verifica el nombre de tu carpeta en GitHub.");
-            return;
-        }
         document.getElementById('home-screen').style.display = 'none';
         document.getElementById('game-screen-loto').style.display = 'block';
         currentLotoIndex = 0;
@@ -830,12 +785,10 @@ const GITHUB_REPO = 'cursoelectricidadbasico';
     function cargarEscenarioLoto() {
         const scenario = lotoScenarios[currentLotoIndex];
         document.getElementById('loto-scenario-title').textContent = scenario.title;
-        document.getElementById('loto-element-name').textContent = `Elemento clave: ${scenario.imageKey.toUpperCase()}`;
+        document.getElementById('loto-element-name').textContent = `Elemento clave: ${scenario.imageKey.split('.')[0].toUpperCase()}`;
         
         const imgContainer = document.getElementById('loto-img-container');
-        
-        // Buscar la imagen correspondiente dentro de la carpeta 'seguridad electrica' escaneada
-        let foundImg = repoData['seguridad electrica'].find(item => item.file.toLowerCase().includes(scenario.imageKey));
+        let foundImg = repoData["seguridad electrica"].find(item => item.file.toLowerCase() === scenario.imageKey);
         
         if (foundImg) {
             imgContainer.innerHTML = `<img src="./${foundImg.path}" alt="${scenario.imageKey}">`;
@@ -889,6 +842,39 @@ const GITHUB_REPO = 'cursoelectricidadbasico';
         const listContainer = document.getElementById('loto-steps-list');
         let currentOrder = Array.from(listContainer.children).map(el => el.dataset.stepText);
 
+        let esCorrecto = true;
+        for (let i = 0; i < scenario.steps.length; i++) {
+            if (currentOrder[i] !== scenario.steps[i]) {
+                esCorrecto = false;
+                break;
+            }
+        }
+
+        const resultsDiv = document.getElementById('results-loto');
+        resultsDiv.style.display = 'block';
+
+        if (esCorrecto) {
+            currentLotoIndex++;
+            if (currentLotoIndex < lotoScenarios.length) {
+                resultsDiv.className = 'success';
+                resultsDiv.innerHTML = `<strong>¡Secuencia correcta!</strong> Avanzando al siguiente escenario...`;
+                setTimeout(() => { cargarEscenarioLoto(); }, 2000);
+            } else {
+                resultsDiv.className = 'success';
+                resultsDiv.innerHTML = `<strong>¡Felicitaciones! Has completado todos los escenarios de Riesgo Eléctrico y LOTO.</strong>`;
+                setTimeout(() => { volverHome(); }, 4000);
+            }
+        } else {
+            resultsDiv.className = 'warning-box';
+            resultsDiv.innerHTML = `<strong>Secuencia incorrecta.</strong> Revisa el orden lógico de los pasos de seguridad antes de intervenir el equipo.`;
+        }
+    }
+
+    function allowDrop(e) { e.preventDefault(); }
+</script>
+
+</body>
+</html>
         let esCorrecto = true;
         for (let i = 0; i < scenario.steps.length; i++) {
             if (currentOrder[i] !== scenario.steps[i]) {
