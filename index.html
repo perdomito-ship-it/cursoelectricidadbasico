@@ -1057,28 +1057,51 @@
 
     function verificarResultadoStd() {
         const bagZone = document.getElementById('bag-zone-std');
-        const itemsEnBolso = Array.from(bagZone.children).map(el => el.id);
-        let correctas = 0, errores = 0, faltantes = 0;
+        const itemsEnBolsoIds = Array.from(bagZone.children).map(el => el.id);
+        
+        let correctos = [];
+        let faltantes = [];
+        let sobrantes = [];
 
         currentRequired.forEach(req => {
-            if (itemsEnBolso.includes(req.id)) correctas++;
-            else faltantes++;
-        });
-        itemsEnBolso.forEach(id => {
-            if (!currentRequired.some(req => req.id === id)) errores++;
+            if (itemsEnBolsoIds.includes(req.id)) {
+                correctos.push(req.name);
+            } else {
+                faltantes.push(req.name);
+            }
         });
 
-        let puntaje = Math.max(0, Math.round(((correctas - errores) / currentRequired.length) * 100));
+        Array.from(bagZone.children).forEach(card => {
+            let itemObj = masterData.find(m => m.id === card.id);
+            if (itemObj && !currentRequired.some(req => req.id === card.id)) {
+                sobrantes.push(itemObj.name);
+            }
+        });
+
+        let totalRequeridos = currentRequired.length;
+        let puntaje = Math.max(0, Math.round(((correctos.length - sobrantes.length) / totalRequeridos) * 100));
         const resDiv = document.getElementById('results');
         resDiv.style.display = 'block';
 
-        if (puntaje === 100 && errores === 0) {
+        let htmlFeedback = `<h3>Resultado de Evaluación: ${puntaje}%</h3>`;
+        
+        if (correctos.length > 0) {
+            htmlFeedback += `<p style="color: #166534; margin: 5px 0;"><strong>✅ Elementos Acertados (${correctos.length}):</strong> ${correctos.join(', ')}</p>`;
+        }
+        if (faltantes.length > 0) {
+            htmlFeedback += `<p style="color: #991b1b; margin: 5px 0;"><strong>❌ Elementos Faltantes (${faltantes.length}):</strong> Te faltó incluir ${faltantes.join(', ')}.</p>`;
+        }
+        if (sobrantes.length > 0) {
+            htmlFeedback += `<p style="color: #d97706; margin: 5px 0;"><strong>⚠️ Elementos Incorrectos/Sobrantes (${sobrantes.length}):</strong> No debías incluir ${sobrantes.join(', ')}.</p>`;
+        }
+
+        if (puntaje === 100 && sobrantes.length === 0) {
             resDiv.className = 'success';
-            resDiv.innerHTML = `<strong>¡Excelente trabajo! (100%).</strong> Elementos seleccionados correctamente.`;
         } else {
             resDiv.className = 'warning-box';
-            resDiv.innerHTML = `<strong>Acierto del ${puntaje}%</strong><br>Correctos: ${correctas} | Faltantes: ${faltantes} | Sobrantes: ${errores}`;
         }
+
+        resDiv.innerHTML = htmlFeedback;
     }
 
     /* --- MODO SÍMBOLOS (EVALUACIÓN) --- */
@@ -1147,27 +1170,44 @@
 
     function verificarResultadoSymbols() {
         const dropzones = document.querySelectorAll('.symbol-dropzone');
-        let correctos = 0, vacios = 0, incorrectos = 0;
+        let correctosCount = 0;
+        let feedbackList = [];
 
         dropzones.forEach(zone => {
-            let expected = zone.dataset.expectedId;
+            let expectedId = zone.dataset.expectedId;
+            let expectedItem = masterData.find(m => m.id === expectedId);
+            let expectedName = expectedItem ? expectedItem.name : "Símbolo";
+
             let inside = zone.querySelector('div');
-            if (!inside) vacios++;
-            else if (inside.dataset.itemId === expected) correctos++;
-            else incorrectos++;
+            if (!inside) {
+                feedbackList.push(`<li style="color: #d97706;"><strong>⚠️ ${expectedName}:</strong> Casilla vacía. No asignaste ningún símbolo.</li>`);
+            } else {
+                let actualId = inside.dataset.itemId;
+                let actualItem = masterData.find(m => m.id === actualId);
+                let actualName = actualItem ? actualItem.name : "símbolo";
+
+                if (actualId === expectedId) {
+                    correctosCount++;
+                    feedbackList.push(`<li style="color: #166534;"><strong>✅ ${expectedName}:</strong> Símbolo asignado correctamente.</li>`);
+                } else {
+                    feedbackList.push(`<li style="color: #991b1b;"><strong>❌ ${expectedName}:</strong> Te equivocaste. Asignaste la imagen de <em>"${actualName}"</em>.</li>`);
+                }
+            }
         });
 
-        let puntaje = Math.round((correctos / dropzones.length) * 100);
+        let puntaje = Math.round((correctosCount / dropzones.length) * 100);
         const resDiv = document.getElementById('results-symbols');
         resDiv.style.display = 'block';
 
-        if (puntaje === 100 && vacios === 0) {
+        let htmlFeedback = `<h3>Resultado de Símbolos: ${puntaje}%</h3><ul style="padding-left: 20px; text-align: left; margin: 10px 0;">${feedbackList.join('')}</ul>`;
+
+        if (puntaje === 100) {
             resDiv.className = 'success';
-            resDiv.innerHTML = `<strong>¡Excelente trabajo! (100%).</strong> Todos los símbolos asociados correctamente.`;
         } else {
             resDiv.className = 'warning-box';
-            resDiv.innerHTML = `<strong>Acierto del ${puntaje}%</strong><br>Correctos: ${correctos} | Vacíos: ${vacios} | Erróneos: ${incorrectos}`;
         }
+
+        resDiv.innerHTML = htmlFeedback;
     }
 
     /* --- MODO LOTO --- */
@@ -1228,31 +1268,43 @@
         const listContainer = document.getElementById('loto-steps-list');
         let currentOrder = Array.from(listContainer.children).map(el => el.dataset.stepText);
 
-        let esCorrecto = true;
+        let correctos = 0;
+        let feedbackList = [];
+
         for (let i = 0; i < scenario.steps.length; i++) {
-            if (currentOrder[i] !== scenario.steps[i]) {
-                esCorrecto = false;
-                break;
+            let esperado = scenario.steps[i];
+            let actual = currentOrder[i];
+
+            if (actual === esperado) {
+                correctos++;
+                feedbackList.push(`<li style="color: #166534;"><strong>Paso ${i + 1} ✅:</strong> Correcto (${actual}).</li>`);
+            } else {
+                feedbackList.push(`<li style="color: #991b1b;"><strong>Paso ${i + 1} ❌:</strong> Colocaste <em>"${actual}"</em>, pero el paso correcto en esta posición era <strong>"${esperado}"</strong>.</li>`);
             }
         }
 
+        let puntaje = Math.round((correctos / scenario.steps.length) * 100);
         const resultsDiv = document.getElementById('results-loto');
         resultsDiv.style.display = 'block';
 
-        if (esCorrecto) {
+        let htmlFeedback = `<h3>Resultado de Secuencia LOTO: ${puntaje}%</h3><ul style="padding-left: 20px; text-align: left; margin: 10px 0;">${feedbackList.join('')}</ul>`;
+
+        if (correctos === scenario.steps.length) {
+            resultsDiv.className = 'success';
+            htmlFeedback += `<p style="color: #166534; font-weight: bold;">¡Secuencia perfecta! Avanzando al siguiente escenario...</p>`;
+            resultsDiv.innerHTML = htmlFeedback;
             currentLotoIndex++;
             if (currentLotoIndex < lotoScenarios.length) {
-                resultsDiv.className = 'success';
-                resultsDiv.innerHTML = `<strong>¡Secuencia correcta!</strong> Avanzando al siguiente escenario...`;
-                setTimeout(() => { cargarEscenarioLoto(); }, 2000);
+                setTimeout(() => { cargarEscenarioLoto(); }, 3000);
             } else {
-                resultsDiv.className = 'success';
-                resultsDiv.innerHTML = `<strong>¡Felicitaciones! Has completado todos los escenarios de Riesgo Eléctrico y LOTO.</strong>`;
-                setTimeout(() => { volverHome(); }, 4000);
+                setTimeout(() => {
+                    resultsDiv.innerHTML = `<h3>¡Felicitaciones! Has completado todos los escenarios de Riesgo Eléctrico y LOTO.</h3>`;
+                    setTimeout(() => { volverHome(); }, 3000);
+                }, 3000);
             }
         } else {
             resultsDiv.className = 'warning-box';
-            resultsDiv.innerHTML = `<strong>Secuencia incorrecta.</strong> Revisa el orden lógico de los pasos de seguridad antes de intervenir el equipo.`;
+            resultsDiv.innerHTML = htmlFeedback;
         }
     }
 
@@ -1322,39 +1374,50 @@
         const resDiv = document.getElementById('results-clamp');
         resDiv.style.display = 'block';
 
-        if (hook !== 'single') {
-            resDiv.className = 'warning-box';
-            resDiv.innerHTML = `<strong>Error de Enganche:</strong> Para medir corriente con pinza debes abrazar UN SOLO conductor (Rojo / Fase). Si abrazas ambos conductores a la vez (dúplex), los campos magnéticos se cancelan y marca 0A.`;
-            return;
-        }
+        let feedbackList = [];
+        let esTodoCorrecto = true;
 
-        if (range === 'OFF') {
-            resDiv.className = 'warning-box';
-            resDiv.innerHTML = `<strong>Instrumento Apagado:</strong> Selecciona una escala de corriente AC adecuada (4A, 40A o 400A).`;
-            return;
-        }
-
-        if (caso.loadCurrent <= 4 && range === '4A') {
-            resDiv.className = 'success';
-            resDiv.innerHTML = `<strong>¡Medición Correcta y Máxima Precisión!</strong> Escala adecuada (4A AC) y enganche individual en la Fase.`;
-        } else if (caso.loadCurrent > 4 && caso.loadCurrent <= 40 && range === '40A') {
-            resDiv.className = 'success';
-            resDiv.innerHTML = `<strong>¡Medición Correcta!</strong> Escala adecuada (40A AC) para el consumo medido.`;
-        } else if (caso.loadCurrent > 40 && range === '400A') {
-            resDiv.className = 'success';
-            resDiv.innerHTML = `<strong>¡Medición Correcta!</strong> Escala de 400A AC requerida para cargas altas.`;
-        } else if (range === '4A' && caso.loadCurrent > 4) {
-            resDiv.className = 'warning-box';
-            resDiv.innerHTML = `<strong>Sobrecarga (OL):</strong> La corriente supera la escala de 4A. Cambia la perilla a 40A o 400A AC.`;
-        } else if (range === '40A' && caso.loadCurrent > 40) {
-            resDiv.className = 'warning-box';
-            resDiv.innerHTML = `<strong>Sobrecarga (OL):</strong> La corriente supera la escala de 40A. Cambia la perilla a 400A AC.`;
+        // Feedback de Enganche de Mordaza
+        if (hook === 'single') {
+            feedbackList.push(`<li style="color: #166534;"><strong>✅ Enganche Correcto:</strong> Abrazaste solo 1 conductor (Fase/Rojo), permitiendo la inducción magnética adecuada.</li>`);
+        } else if (hook === 'duplex') {
+            esTodoCorrecto = false;
+            feedbackList.push(`<li style="color: #991b1b;"><strong>❌ Enganche Incorrecto:</strong> Abrazaste ambos conductores (dúplex). Las corrientes opuestas de fase y neutro cancelan el campo magnético y la lectura da 0A.</li>`);
         } else {
-            resDiv.className = 'success';
-            resDiv.innerHTML = `<strong>Medición Aceptable:</strong> Seleccionaste una escala más alta de la necesaria, pero la medición es válida y segura.`;
+            esTodoCorrecto = false;
+            feedbackList.push(`<li style="color: #d97706;"><strong>⚠️ Enganche Pendiente:</strong> No has colocado la mordaza sobre el conductor.</li>`);
         }
 
-        currentClampCasoIndex = (currentClampCasoIndex + 1) % clampCasos.length;
+        // Feedback de Escala
+        if (range === 'OFF') {
+            esTodoCorrecto = false;
+            feedbackList.push(`<li style="color: #991b1b;"><strong>❌ Perilla en OFF:</strong> El instrumento está apagado. Debes seleccionar una escala de corriente AC.</li>`);
+        } else if (range === '4A' && caso.loadCurrent > 4) {
+            esTodoCorrecto = false;
+            feedbackList.push(`<li style="color: #991b1b;"><strong>❌ Escala Insuficiente (4A):</strong> La corriente real es de ${caso.loadCurrent}A AC, por lo que la pantalla indica sobrecarga (OL). Debes cambiar a la escala de 40A o 400A.</li>`);
+        } else if (range === '40A' && caso.loadCurrent > 40) {
+            esTodoCorrecto = false;
+            feedbackList.push(`<li style="color: #991b1b;"><strong>❌ Escala Insuficiente (40A):</strong> La corriente real es de ${caso.loadCurrent}A AC (Sobrecarga OL). Debes usar la escala de 400A AC.</li>`);
+        } else if (caso.loadCurrent <= 4 && range === '4A') {
+            feedbackList.push(`<li style="color: #166534;"><strong>✅ Escala Óptima (4A):</strong> Seleccionaste la escala ideal de máxima precisión para esta carga.</li>`);
+        } else if (caso.loadCurrent <= 40 && range === '40A') {
+            feedbackList.push(`<li style="color: #166534;"><strong>✅ Escala Adecuada (40A):</strong> Escala correcta para medir este nivel de corriente.</li>`);
+        } else if (range === '400A') {
+            feedbackList.push(`<li style="color: #166534;"><strong>✅ Escala Adecuada (400A):</strong> Escala correcta para corrientes elevadas.</li>`);
+        }
+
+        let htmlFeedback = `<h3>Retroalimentación de Medición con Pinza</h3><ul style="padding-left: 20px; text-align: left; margin: 10px 0;">${feedbackList.join('')}</ul>`;
+
+        if (esTodoCorrecto) {
+            resDiv.className = 'success';
+        } else {
+            resDiv.className = 'warning-box';
+        }
+
+        resDiv.innerHTML = htmlFeedback;
+        if (esTodoCorrecto) {
+            currentClampCasoIndex = (currentClampCasoIndex + 1) % clampCasos.length;
+        }
     }
 
     /* --- LÓGICA SIMULADOR MULTÍMETRO DIGITAL --- */
@@ -1400,34 +1463,56 @@
         const resDiv = document.getElementById('results-dmm');
         resDiv.style.display = 'block';
 
-        if (jackBlack !== 'COM') {
-            resDiv.className = 'warning-box';
-            resDiv.innerHTML = `<strong>Error de Conexión de Punta Negra:</strong> La punta negra siempre debe ir en el borne COM.`;
-            return;
+        let feedbackList = [];
+        let esTodoCorrecto = true;
+
+        // 1. Evaluación Perilla / Función
+        if (func === caso.type) {
+            feedbackList.push(`<li style="color: #166534;"><strong>✅ Perilla / Selector:</strong> Configurado correctamente en la función requerida.</li>`);
+        } else if (func === 'OFF') {
+            esTodoCorrecto = false;
+            feedbackList.push(`<li style="color: #991b1b;"><strong>❌ Perilla en OFF:</strong> El multímetro está apagado. Debes girar el selector a la función requerida.</li>`);
+        } else {
+            esTodoCorrecto = false;
+            feedbackList.push(`<li style="color: #991b1b;"><strong>❌ Perilla Incorrecta:</strong> Seleccionaste una función distinta a la prueba solicitada.</li>`);
         }
 
+        // 2. Evaluación Borne Negro (COM)
+        if (jackBlack === 'COM') {
+            feedbackList.push(`<li style="color: #166534;"><strong>✅ Borne Punta Negra:</strong> Conectada correctamente en el terminal común (COM).</li>`);
+        } else {
+            esTodoCorrecto = false;
+            feedbackList.push(`<li style="color: #991b1b;"><strong>❌ Borne Punta Negra:</strong> Conectada en un terminal incorrecto. La punta negra SIEMPRE debe ir en COM.</li>`);
+        }
+
+        // 3. Evaluación Borne Rojo (+)
         if ((func === 'VAC' || func === 'VDC') && jackRed === '10A') {
-            resDiv.className = 'warning-box';
-            resDiv.innerHTML = `<strong>❌ CORTOCIRCUITO CRÍTICO:</strong> Conectaste la punta roja en el borne de Amperios (10A) e intentaste medir voltaje. Esto genera un cortocircuito directo que daña los fusibles internos del multímetro.`;
-            return;
+            esTodoCorrecto = false;
+            feedbackList.push(`<li style="color: #991b1b;"><strong>❌ Borne Punta Roja (CORTOCIRCUITO CRÍTICO):</strong> Conectaste la punta en el borne de alta corriente (10A) e intentaste medir voltaje. Esto crea un cortocircuito directo a través del shunt interno que quema los fusibles del instrumento.</li>`);
+        } else if (func === 'DCA' && jackRed !== '10A') {
+            esTodoCorrecto = false;
+            feedbackList.push(`<li style="color: #991b1b;"><strong>❌ Borne Punta Roja:</strong> Para medir Corriente Continua (DCA) en serie, la punta roja debe colocarse en el borne de amperios (10A).</li>`);
+        } else if ((func === 'VAC' || func === 'VDC' || func === 'OHM' || func === 'CONT') && jackRed === 'V_OHM') {
+            feedbackList.push(`<li style="color: #166534;"><strong>✅ Borne Punta Roja:</strong> Conectada correctamente en el borne V / Ω / Hz.</li>`);
+        } else if (func === 'DCA' && jackRed === '10A') {
+            feedbackList.push(`<li style="color: #166534;"><strong>✅ Borne Punta Roja:</strong> Conectada correctamente en el borne de amperaje (10A).</li>`);
+        } else {
+            esTodoCorrecto = false;
+            feedbackList.push(`<li style="color: #991b1b;"><strong>❌ Borne Punta Roja:</strong> Ubicación de terminal errónea para esta prueba.</li>`);
         }
 
-        if (func !== caso.type) {
+        let htmlFeedback = `<h3>Retroalimentación de Medición con Multímetro</h3><ul style="padding-left: 20px; text-align: left; margin: 10px 0;">${feedbackList.join('')}</ul>`;
+
+        if (esTodoCorrecto) {
+            resDiv.className = 'success';
+        } else {
             resDiv.className = 'warning-box';
-            resDiv.innerHTML = `<strong>Función Incorrecta:</strong> La perilla está en una función que no corresponde a la medición requerida.`;
-            return;
         }
 
-        if (func === 'DCA' && jackRed !== '10A') {
-            resDiv.className = 'warning-box';
-            resDiv.innerHTML = `<strong>Error de Borne de Corriente:</strong> Para medir corriente continua (DCA) debes conectar la punta roja en el borne de alta corriente (10A).`;
-            return;
+        resDiv.innerHTML = htmlFeedback;
+        if (esTodoCorrecto) {
+            currentDmmCasoIndex = (currentDmmCasoIndex + 1) % dmmCasos.length;
         }
-
-        resDiv.className = 'success';
-        resDiv.innerHTML = `<strong>¡Medición Correcta y Segura!</strong> Posición de perilla y conexión de bornes configurados correctamente.`;
-
-        currentDmmCasoIndex = (currentDmmCasoIndex + 1) % dmmCasos.length;
     }
 
     function allowDrop(e) { e.preventDefault(); }
