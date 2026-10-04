@@ -214,7 +214,7 @@
             cursor: grab;
         }
 
-        /* Estilos LOTO Móvil Amigable */
+        /* Estilos LOTO */
         .loto-workspace {
             display: flex;
             gap: 20px;
@@ -307,6 +307,84 @@
             background: #cbd5e1;
         }
 
+        /* Estilos Medidores / Instrumentos */
+        .meter-workspace {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        .meter-panel, .controls-panel {
+            flex: 1;
+            min-width: 300px;
+            background: #f8fafc;
+            border: 2px solid #cbd5e1;
+            border-radius: 8px;
+            padding: 20px;
+        }
+        .display-screen {
+            background: #1e293b;
+            color: #4ade80;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 2.2em;
+            font-weight: bold;
+            text-align: right;
+            padding: 15px 20px;
+            border-radius: 6px;
+            border: 4px solid #94a3b8;
+            margin-bottom: 15px;
+            letter-spacing: 2px;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
+        }
+        .control-group {
+            margin-bottom: 15px;
+            background: #fff;
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid #cbd5e1;
+        }
+        .control-group label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 6px;
+            color: #1e293b;
+        }
+        .control-group select {
+            width: 100%;
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #cbd5e1;
+            font-size: 0.95em;
+        }
+        .clamp-graphic {
+            width: 100%;
+            height: 180px;
+            border: 2px dashed #94a3b8;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #fff;
+            position: relative;
+            margin-bottom: 15px;
+        }
+        .cable-line {
+            height: 12px;
+            width: 80%;
+            border-radius: 6px;
+            position: absolute;
+        }
+        .phase-cable { background: #ef4444; top: 35%; }
+        .duplex-cable { background: #334155; top: 55%; }
+        .clamp-jaw {
+            width: 70px;
+            height: 70px;
+            border: 8px solid #d97706;
+            border-radius: 50%;
+            position: absolute;
+            transition: all 0.3s;
+        }
+
         .btn-container {
             text-align: center;
             display: flex;
@@ -332,7 +410,7 @@
         .btn-warning { background: #d97706; }
         .btn-warning:hover { background: #b45309; }
         
-        #results, #results-symbols, #results-loto {
+        #results, #results-symbols, #results-loto, #results-clamp, #results-dmm {
             margin-top: 20px;
             padding: 15px;
             border-radius: 6px;
@@ -381,6 +459,19 @@
                 <h3>Riesgo Eléctrico / LOTO</h3>
                 <p id="count-seguridad electrica">Escaneando...</p>
                 <button onclick="iniciarLoto()">Entrenar Seguridad</button>
+            </div>
+
+            <!-- NUEVAS HERRAMIENTAS DE MEDICIÓN -->
+            <div class="menu-card" style="border-color: #d97706; background: #fffbeb;">
+                <h3>Pinza Amperimétrica</h3>
+                <p>Simulador de escalas y prueba del único conductor.</p>
+                <button class="btn-warning" onclick="iniciarPinza()">Simular Pinza</button>
+            </div>
+
+            <div class="menu-card" style="border-color: #059669; background: #ecfdf5;">
+                <h3>Multímetro Digital</h3>
+                <p>Simulador de perilla, bornes, funciones y prueba de cortocircuito.</p>
+                <button style="background: #059669;" onclick="iniciarMultimetro()">Simular Multímetro</button>
             </div>
         </div>
     </div>
@@ -470,10 +561,10 @@
         <div id="results-symbols"></div>
     </div>
 
-    <!-- 5. PANTALLA DE JUEGO LOTO (Optimizado para Celulares y PCs) -->
+    <!-- 5. PANTALLA DE JUEGO LOTO -->
     <div id="game-screen-loto" class="game-screen">
         <h2 id="loto-scenario-title">Simulador de Riesgo Eléctrico y LOTO</h2>
-        <div class="instructions">Usa los botones ⬆️ y ⬇️ para ordenar los pasos de seguridad en la secuencia correcta (1 al N). Funciona en celulares y PC.</div>
+        <div class="instructions">Usa los botones ⬆️ y ⬇️️ para ordenar los pasos de seguridad en la secuencia correcta (1 al N). Funciona en celulares y PC.</div>
 
         <div class="loto-workspace">
             <div class="loto-visual-panel">
@@ -494,6 +585,121 @@
         </div>
 
         <div id="results-loto"></div>
+    </div>
+
+    <!-- 6. SIMULADOR Y EVALUACIÓN DE PINZA AMPERIMÉTRICA -->
+    <div id="game-screen-clamp" class="game-screen">
+        <h2>Simulador Práctico: Pinza Amperimétrica</h2>
+        <div class="instructions">
+            Ajusta el modo de enganche y la escala adecuada antes de realizar la lectura de corriente.
+        </div>
+
+        <div class="meter-workspace">
+            <div class="meter-panel">
+                <div class="section-title">Pantalla de la Pinza</div>
+                <div class="display-screen" id="clamp-display">00.0 A</div>
+                
+                <div class="clamp-graphic">
+                    <div class="cable-line phase-cable" title="Un solo Conductor (Fase)"></div>
+                    <div class="cable-line duplex-cable" title="Cable Dúplex (Fase + Neutro juntas)"></div>
+                    <div class="clamp-jaw" id="clamp-jaw-position"></div>
+                </div>
+                <p id="clamp-scenario-text" style="text-align: center; font-weight: bold; color: #1e293b;"></p>
+            </div>
+
+            <div class="controls-panel">
+                <div class="section-title">Configuración del Instrumento</div>
+                
+                <div class="control-group">
+                    <label>1. Posición de la Mordaza:</label>
+                    <select id="clamp-hook-mode" onchange="actualizarPinza()">
+                        <option value="none">-- Selecciona cómo enganchar --</option>
+                        <option value="single">Abrazar SOLO 1 Conductor (Fase)</option>
+                        <option value="duplex">Abrazar Cable Dúplex Completo (Fase + Neutro)</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label>2. Escala Seleccionada (Perilla):</label>
+                    <select id="clamp-range" onchange="actualizarPinza()">
+                        <option value="OFF">APAGADO (OFF)</option>
+                        <option value="20A">Escala 20A AC</option>
+                        <option value="200A">Escala 200A AC</option>
+                        <option value="600A">Escala 600A AC</option>
+                    </select>
+                </div>
+
+                <div class="btn-container">
+                    <button class="btn-warning" onclick="evaluarCasoPinza()">Validar Lectura</button>
+                    <button class="btn-secondary" onclick="nuevoCasoPinza()">Siguiente Carga 🔄</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="btn-container">
+            <button class="btn-secondary" onclick="volverHome()">Menú Principal</button>
+        </div>
+
+        <div id="results-clamp"></div>
+    </div>
+
+    <!-- 7. SIMULADOR Y EVALUACIÓN DE MULTÍMETRO DIGITAL -->
+    <div id="game-screen-dmm" class="game-screen">
+        <h2>Simulador Práctico: Multímetro Digital</h2>
+        <div class="instructions">
+            Selecciona la función correcta en la perilla y conecta las puntas en los bornes adecuados según la medición solicitada.
+        </div>
+
+        <div class="meter-workspace">
+            <div class="meter-panel">
+                <div class="section-title">Pantalla del Multímetro</div>
+                <div class="display-screen" id="dmm-display">000.0</div>
+                <p id="dmm-scenario-text" style="text-align: center; font-weight: bold; color: #2563eb; font-size: 1.1em;"></p>
+            </div>
+
+            <div class="controls-panel">
+                <div class="section-title">Controles del Multímetro</div>
+                
+                <div class="control-group">
+                    <label>1. Selector de Función (Perilla):</label>
+                    <select id="dmm-function" onchange="actualizarMultimetro()">
+                        <option value="OFF">OFF (Apagado)</option>
+                        <option value="VAC">Voltaje Alterno (V~)</option>
+                        <option value="VDC">Voltaje Continuo (V=)</option>
+                        <option value="OHM">Resistencia (Ω)</option>
+                        <option value="CONT">Continuidad (Bip 🔊)</option>
+                        <option value="AMP">Corriente Alterna (A~)</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label>2. Borne Punta Negra (COM):</label>
+                    <select id="dmm-jack-black">
+                        <option value="COM">COM (Común - Correcto)</option>
+                        <option value="WRONG">Otro Borne (Incorrecto)</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label>3. Borne Punta Roja (+):</label>
+                    <select id="dmm-jack-red" onchange="actualizarMultimetro()">
+                        <option value="V_OHM">V / Ω / Hz (Voltaje, Resistencia, Continuidad)</option>
+                        <option value="10A">10A / A (Amperios / Corriente Alta)</option>
+                    </select>
+                </div>
+
+                <div class="btn-container">
+                    <button style="background: #059669;" onclick="evaluarMultimetro()">Tomar Medición</button>
+                    <button class="btn-secondary" onclick="nuevoCasoMultimetro()">Siguiente Prueba 🔄</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="btn-container">
+            <button class="btn-secondary" onclick="volverHome()">Menú Principal</button>
+        </div>
+
+        <div id="results-dmm"></div>
     </div>
 </div>
 
@@ -518,6 +724,24 @@
 
     let lotoScenarios = [];
     let currentLotoIndex = 0;
+
+    // Escenarios para la Pinza Amperimétrica
+    const clampCasos = [
+        { desc: "Medir corriente en la Fase de un Motor Residencial de 12 A AC.", loadCurrent: 12.4 },
+        { desc: "Medir corriente en un Compresor Industrial de Aire de 145 A AC.", loadCurrent: 145.2 },
+        { desc: "Medir consumo de una Lámpara LED de 0.8 A AC.", loadCurrent: 0.85 }
+    ];
+    let currentClampCasoIndex = 0;
+
+    // Escenarios para el Multímetro
+    const dmmCasos = [
+        { desc: "Verificar voltaje en un Tomacorriente Residencial (120V AC esperados).", type: "VAC", val: 121.5 },
+        { desc: "Medir el voltaje de una Batería de Respaldo de 12V DC.", type: "VDC", val: 12.6 },
+        { desc: "Comprobar el estado de un Fusible (Debe dar continuidad o baja resistencia).", type: "CONT", val: 0.2 },
+        { desc: "Medir valor de resistencia de una Resistencia de Calentamiento (50 Ω).", type: "OHM", val: 49.8 },
+        { desc: "Medir el consumo en Amperios de una bomba conectada en serie (5A AC).", type: "AMP", val: 5.1 }
+    ];
+    let currentDmmCasoIndex = 0;
 
     window.onload = async function() {
         try {
@@ -595,12 +819,28 @@
         cargarEscenarioLoto();
     }
 
+    function iniciarPinza() {
+        document.getElementById('home-screen').style.display = 'none';
+        document.getElementById('game-screen-clamp').style.display = 'block';
+        currentClampCasoIndex = 0;
+        nuevoCasoPinza();
+    }
+
+    function iniciarMultimetro() {
+        document.getElementById('home-screen').style.display = 'none';
+        document.getElementById('game-screen-dmm').style.display = 'block';
+        currentDmmCasoIndex = 0;
+        nuevoCasoMultimetro();
+    }
+
     function volverHome() {
         document.getElementById('home-screen').style.display = 'block';
         document.getElementById('difficulty-screen').style.display = 'none';
         document.getElementById('game-screen-standard').style.display = 'none';
         document.getElementById('game-screen-symbols').style.display = 'none';
         document.getElementById('game-screen-loto').style.display = 'none';
+        document.getElementById('game-screen-clamp').style.display = 'none';
+        document.getElementById('game-screen-dmm').style.display = 'none';
     }
 
     function iniciarTestConDificultad(cantidad) {
@@ -795,7 +1035,7 @@
         }
     }
 
-    /* --- MODO LOTO (Móvil y PC compatible con botones de desplazamiento) --- */
+    /* --- MODO LOTO --- */
     function cargarEscenarioLoto() {
         const scenario = lotoScenarios[currentLotoIndex];
         document.getElementById('loto-scenario-title').textContent = scenario.title;
@@ -839,15 +1079,11 @@
         if (nuevoIndex >= 0 && nuevoIndex < items.length) {
             let pasoActualText = items[index].dataset.stepText;
             let pasoDestinoText = items[nuevoIndex].dataset.stepText;
-
-            // Extraer todos los textos actuales
             let currentSteps = items.map(el => el.dataset.stepText);
             
-            // Intercambiar posiciones
             currentSteps[index] = pasoDestinoText;
             currentSteps[nuevoIndex] = pasoActualText;
 
-            // Volver a renderizar la lista actualizada
             renderizarPasosLoto(currentSteps);
         }
     }
@@ -883,6 +1119,165 @@
             resultsDiv.className = 'warning-box';
             resultsDiv.innerHTML = `<strong>Secuencia incorrecta.</strong> Revisa el orden lógico de los pasos de seguridad antes de intervenir el equipo.`;
         }
+    }
+
+    /* --- LÓGICA SIMULADOR PINZA AMPERIMÉTRICA --- */
+    function nuevoCasoPinza() {
+        const caso = clampCasos[currentClampCasoIndex];
+        document.getElementById('clamp-scenario-text').textContent = caso.desc;
+        document.getElementById('clamp-hook-mode').value = 'none';
+        document.getElementById('clamp-range').value = 'OFF';
+        document.getElementById('results-clamp').style.display = 'none';
+        actualizarPinza();
+    }
+
+    function actualizarPinza() {
+        const hook = document.getElementById('clamp-hook-mode').value;
+        const range = document.getElementById('clamp-range').value;
+        const jaw = document.getElementById('clamp-jaw-position');
+        const display = document.getElementById('clamp-display');
+
+        if (hook === 'single') {
+            jaw.style.top = '22%';
+            jaw.style.opacity = '1';
+        } else if (hook === 'duplex') {
+            jaw.style.top = '42%';
+            jaw.style.opacity = '1';
+        } else {
+            jaw.style.opacity = '0';
+        }
+
+        if (range === 'OFF') {
+            display.textContent = "   OFF";
+            return;
+        }
+
+        if (hook === 'duplex') {
+            display.textContent = "00.0 A"; // Campos cancelados
+            return;
+        }
+
+        if (hook === 'single') {
+            const current = clampCasos[currentClampCasoIndex].loadCurrent;
+            if (range === '20A') {
+                display.textContent = current > 20 ? "OL . A" : current.toFixed(2) + " A";
+            } else if (range === '200A') {
+                display.textContent = current > 200 ? "OL . A" : current.toFixed(1) + " A";
+            } else if (range === '600A') {
+                display.textContent = current.toFixed(0) + " A";
+            }
+        } else {
+            display.textContent = "00.0 A";
+        }
+    }
+
+    function evaluarCasoPinza() {
+        const hook = document.getElementById('clamp-hook-mode').value;
+        const range = document.getElementById('clamp-range').value;
+        const caso = clampCasos[currentClampCasoIndex];
+        const resDiv = document.getElementById('results-clamp');
+        resDiv.style.display = 'block';
+
+        if (hook !== 'single') {
+            resDiv.className = 'warning-box';
+            resDiv.innerHTML = `<strong>Error de Enganche:</strong> Para medir corriente con pinza debes abrazar UN SOLO conductor (Fase). Si abrazas el cable dúplex completo, los campos magnéticos se cancelan y marca 0A.`;
+            return;
+        }
+
+        if (range === 'OFF') {
+            resDiv.className = 'warning-box';
+            resDiv.innerHTML = `<strong>Instrumento Apagado:</strong> Selecciona una escala de corriente AC adecuada.`;
+            return;
+        }
+
+        if (caso.loadCurrent <= 20 && range === '20A') {
+            resDiv.className = 'success';
+            resDiv.innerHTML = `<strong>¡Medición Correcta y Precisa!</strong> Escala adecuada y enganche individual correcto.`;
+        } else if (caso.loadCurrent > 20 && caso.loadCurrent <= 200 && range === '200A') {
+            resDiv.className = 'success';
+            resDiv.innerHTML = `<strong>¡Medición Correcta!</strong> Escala adecuada para cargas medias.`;
+        } else if (range === '20A' && caso.loadCurrent > 20) {
+            resDiv.className = 'warning-box';
+            resDiv.innerHTML = `<strong>Sobrecarga (OL):</strong> La carga supera los 20A de la escala. Cambia la perilla a 200A o 600A.`;
+        } else {
+            resDiv.className = 'success';
+            resDiv.innerHTML = `<strong>Medición Aceptable:</strong> Seleccionaste una escala más alta de la requerida (perdiste precisión de decimales), pero el procedimiento es seguro.`;
+        }
+
+        currentClampCasoIndex = (currentClampCasoIndex + 1) % clampCasos.length;
+    }
+
+    /* --- LÓGICA SIMULADOR MULTÍMETRO DIGITAL --- */
+    function nuevoCasoMultimetro() {
+        const caso = dmmCasos[currentDmmCasoIndex];
+        document.getElementById('dmm-scenario-text').textContent = caso.desc;
+        document.getElementById('dmm-function').value = 'OFF';
+        document.getElementById('dmm-jack-black').value = 'COM';
+        document.getElementById('dmm-jack-red').value = 'V_OHM';
+        document.getElementById('results-dmm').style.display = 'none';
+        actualizarMultimetro();
+    }
+
+    function actualizarMultimetro() {
+        const func = document.getElementById('dmm-function').value;
+        const jackRed = document.getElementById('dmm-jack-red').value;
+        const display = document.getElementById('dmm-display');
+
+        if (func === 'OFF') {
+            display.textContent = "   OFF";
+            return;
+        }
+
+        // Riesgo crítico de cortocircuito
+        if ((func === 'VAC' || func === 'VDC') && jackRed === '10A') {
+            display.textContent = "¡CORTOCIRCUITO!";
+            return;
+        }
+
+        const caso = dmmCasos[currentDmmCasoIndex];
+        if (func === caso.type) {
+            display.textContent = caso.val + (func === 'VAC' || func === 'VDC' ? " V" : func === 'OHM' ? " Ω" : func === 'AMP' ? " A" : " 🔊");
+        } else {
+            display.textContent = "000.0";
+        }
+    }
+
+    function evaluarMultimetro() {
+        const func = document.getElementById('dmm-function').value;
+        const jackBlack = document.getElementById('dmm-jack-black').value;
+        const jackRed = document.getElementById('dmm-jack-red').value;
+        const caso = dmmCasos[currentDmmCasoIndex];
+        const resDiv = document.getElementById('results-dmm');
+        resDiv.style.display = 'block';
+
+        if (jackBlack !== 'COM') {
+            resDiv.className = 'warning-box';
+            resDiv.innerHTML = `<strong>Error de Borne:</strong> La punta negra SIEMPRE debe ir conectada en el borne común (COM).`;
+            return;
+        }
+
+        if ((func === 'VAC' || func === 'VDC') && jackRed === '10A') {
+            resDiv.className = 'warning-box';
+            resDiv.innerHTML = `<strong>❌ CORTOCIRCUITO CRÍTICO:</strong> Conectaste la punta en el borne de Amperios (10A) e intentaste medir voltaje. Esto causa un cortocircuito directo que quema los fusibles del multímetro.`;
+            return;
+        }
+
+        if (func !== caso.type) {
+            resDiv.className = 'warning-box';
+            resDiv.innerHTML = `<strong>Función Incorrecta:</strong> La perilla está en una función que no corresponde a la prueba requerida.`;
+            return;
+        }
+
+        if (func === 'AMP' && jackRed !== '10A') {
+            resDiv.className = 'warning-box';
+            resDiv.innerHTML = `<strong>Error de Borne de Corriente:</strong> Para medir corriente en Amperios debes mover la punta roja al borne de alta corriente (10A).`;
+            return;
+        }
+
+        resDiv.className = 'success';
+        resDiv.innerHTML = `<strong>¡Medición Correcta y Segura!</strong> Función en perilla y conexión de bornes configurados a la perfección.`;
+
+        currentDmmCasoIndex = (currentDmmCasoIndex + 1) % dmmCasos.length;
     }
 
     function allowDrop(e) { e.preventDefault(); }
