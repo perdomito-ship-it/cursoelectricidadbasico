@@ -486,6 +486,77 @@
             background-color: #eff6ff !important;
         }
 
+    
+        /* --- OPTIMIZACIONES PARA DISPOSITIVOS MÓVILES Y SMARTPHONES --- */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            .container {
+                padding: 10px;
+            }
+
+            /* Módulos de Herramientas, Materiales y Símbolos en 2 Columnas Lado a Lado */
+            .workspace, .symbol-workspace {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+            }
+
+            .pool, .bag, .symbol-pool, .symbol-target-container {
+                min-width: 0; /* Permite reducir el tamaño sin romper la cuadrícula */
+                min-height: 250px;
+                padding: 8px;
+            }
+
+            /* Ajuste de cuadrícula de tarjetas en móviles */
+            .tool-grid {
+                grid-template-columns: repeat(auto-fill, minmax(75px, 1fr));
+                gap: 8px;
+                min-height: 180px;
+            }
+
+            .tool-card {
+                padding: 5px;
+                min-height: 75px;
+            }
+
+            .tool-card img {
+                width: 60px;
+                height: 60px;
+            }
+
+            /* Filas de Símbolos en Móvil */
+            .symbol-row {
+                padding: 6px;
+                gap: 6px;
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
+
+            .symbol-label {
+                width: 100%;
+                font-size: 0.8em;
+            }
+
+            .symbol-dropzone {
+                width: 55px;
+                height: 55px;
+            }
+
+            .symbol-dropzone img {
+                width: 48px;
+                height: 48px;
+            }
+
+            /* Lista de requeridos más compacta */
+            .target-list li {
+                flex: 1 1 100%;
+                font-size: 0.9em;
+            }
+        }
+
     </style>
 </head>
 <body>
