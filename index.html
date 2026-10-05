@@ -466,6 +466,26 @@
         }
         .success { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
         .warning-box { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+    
+        /* Estilos de Selección por Clic para Móviles y PC */
+        .tool-card {
+            cursor: pointer;
+        }
+        .tool-card.selected-symbol {
+            border: 3px solid #2563eb !important;
+            background-color: #dbeafe !important;
+            transform: scale(1.08);
+            box-shadow: 0 0 12px rgba(37, 99, 235, 0.6);
+        }
+        .symbol-dropzone {
+            cursor: pointer;
+            transition: background-color 0.2s, border-color 0.2s;
+        }
+        .symbol-dropzone.active-target {
+            border: 2px dashed #2563eb !important;
+            background-color: #eff6ff !important;
+        }
+
     </style>
 </head>
 <body>
@@ -620,7 +640,7 @@
     <div id="game-screen-symbols" class="game-screen">
         <h2>Entrenador: Símbolos de Planos Eléctricos</h2>
         <div class="instructions">
-            Objetivo: Arrastra cada símbolo gráfico desde el banco izquierdo hacia el recuadro correspondiente al nombre técnico que aparece a la derecha.
+            Objetivo: Haz clic en un símbolo para seleccionarlo (se iluminará en azul) y luego haz clic en su casilla correspondiente. En PC también puedes arrastrar y soltar.
         </div>
 
         <div class="symbol-workspace">
@@ -997,18 +1017,20 @@
         else configurarJuegoStandard();
     }
 
-    /* --- MODO ESTÁNDAR (EVALUACIÓN) --- */
+    /* --- MODO ESTÁNDAR (EVALUACIÓN DE HERRAMIENTAS Y MATERIALES) --- */
     function configurarJuegoStandard() {
         if (activeMode === 'herramientas') {
             document.getElementById('game-title-std').textContent = "Entrenador: Herramientas del Instalador";
             document.getElementById('target-title-std').textContent = "Herramientas que debes incluir en el bolso hoy:";
             document.getElementById('pool-title-std').textContent = "Banco de Herramientas";
             document.getElementById('bag-title-std').textContent = "🎒 Bolso del Instalador";
+            document.getElementById('game-instr-std').textContent = "Objetivo: Haz clic (o toca en móvil) o arrastra las herramientas para moverlas al bolso y viceversa.";
         } else if (activeMode === 'materiales') {
             document.getElementById('game-title-std').textContent = "Entrenador: Materiales Eléctricos";
             document.getElementById('target-title-std').textContent = "Materiales que debes reunir hoy:";
             document.getElementById('pool-title-std').textContent = "Banco de Materiales";
             document.getElementById('bag-title-std').textContent = "📦 Materiales Seleccionados";
+            document.getElementById('game-instr-std').textContent = "Objetivo: Haz clic (o toca en móvil) o arrastra los materiales para moverlos a la zona de destino y viceversa.";
         }
 
         let poolShuffled = [...masterData].sort(() => 0.5 - Math.random());
@@ -1036,23 +1058,21 @@
             div.draggable = true;
             div.id = item.id;
             div.ondragstart = (e) => { e.dataTransfer.setData('text/plain', item.id); };
+            div.onclick = () => { toggleCardStandard(div); };
             div.innerHTML = `<img src="${item.img}" alt="${item.name}">`;
             sourceZone.appendChild(div);
         });
     }
 
-    function dropToBagStd(e) {
-        e.preventDefault();
-        const id = e.dataTransfer.getData('text/plain');
-        const card = document.getElementById(id);
-        if (card) document.getElementById('bag-zone-std').appendChild(card);
-    }
+    function toggleCardStandard(card) {
+        const sourceZone = document.getElementById('source-zone-std');
+        const bagZone = document.getElementById('bag-zone-std');
 
-    function dropToSourceStd(e) {
-        e.preventDefault();
-        const id = e.dataTransfer.getData('text/plain');
-        const card = document.getElementById(id);
-        if (card) document.getElementById('source-zone-std').appendChild(card);
+        if (card.parentElement === sourceZone) {
+            bagZone.appendChild(card);
+        } else {
+            sourceZone.appendChild(card);
+        }
     }
 
     function verificarResultadoStd() {
@@ -1104,8 +1124,11 @@
         resDiv.innerHTML = htmlFeedback;
     }
 
-    /* --- MODO SÍMBOLOS (EVALUACIÓN) --- */
+    /* --- MODO SÍMBOLOS (EVALUACIÓN POR CLIC Y ARRASTRE) --- */
+    let selectedSymbolCardId = null;
+
     function configurarJuegoSymbols() {
+        selectedSymbolCardId = null;
         let limite = Math.min(selectedDifficulty, masterData.length);
         let poolShuffled = [...masterData].sort(() => 0.5 - Math.random());
         currentRequired = poolShuffled.slice(0, limite);
@@ -1123,6 +1146,10 @@
             card.id = 'sym_card_' + item.id;
             card.dataset.itemId = item.id;
             card.ondragstart = (e) => { e.dataTransfer.setData('text/plain', item.id); };
+            card.onclick = (e) => {
+                e.stopPropagation();
+                seleccionarSimboloCard(card.id);
+            };
             card.innerHTML = `<img src="${item.img}" alt="${item.name}">`;
             sourceZone.appendChild(card);
         });
@@ -1132,40 +1159,68 @@
             row.className = 'symbol-row';
             row.innerHTML = `
                 <div class="symbol-label">${item.name}</div>
-                <div class="symbol-dropzone" data-expected-id="${item.id}" ondragover="allowDrop(event)" ondrop="dropToSymbolZone(event, this)"></div>
+                <div class="symbol-dropzone" data-expected-id="${item.id}" 
+                     ondragover="allowDrop(event)" 
+                     ondrop="dropToSymbolZone(event, this)"
+                     onclick="clickOnSymbolDropzone(this)"></div>
             `;
             rowsContainer.appendChild(row);
         });
     }
 
-    function dropToSymbolZone(e, dropzone) {
-        e.preventDefault();
-        const itemId = e.dataTransfer.getData('text/plain');
-        const cardOriginal = document.getElementById('sym_card_' + itemId);
-        if (cardOriginal) {
-            if (dropzone.children.length > 0) {
-                document.getElementById('symbol-source-zone').appendChild(dropzone.children[0]);
-            }
-            let imgClone = cardOriginal.querySelector('img').cloneNode(true);
-            dropzone.innerHTML = '';
-            let wrappedImg = document.createElement('div');
-            wrappedImg.draggable = true;
-            wrappedImg.id = 'sym_card_' + itemId;
-            wrappedImg.dataset.itemId = itemId;
-            wrappedImg.ondragstart = (e) => { e.dataTransfer.setData('text/plain', itemId); };
-            wrappedImg.appendChild(imgClone);
-            dropzone.appendChild(wrappedImg);
-            cardOriginal.remove();
+    function seleccionarSimboloCard(cardId) {
+        // Desmarcar anterior
+        if (selectedSymbolCardId) {
+            let prevCard = document.getElementById(selectedSymbolCardId);
+            if (prevCard) prevCard.classList.remove('selected-symbol');
+        }
+
+        if (selectedSymbolCardId === cardId) {
+            // Si hace clic al mismo, se deselecciona
+            selectedSymbolCardId = null;
+            actualizarDropzonesHighlights(false);
+        } else {
+            selectedSymbolCardId = cardId;
+            let currentCard = document.getElementById(cardId);
+            if (currentCard) currentCard.classList.add('selected-symbol');
+            actualizarDropzonesHighlights(true);
         }
     }
 
-    function dropToSymbolPool(e) {
-        e.preventDefault();
-        const itemId = e.dataTransfer.getData('text/plain');
-        let existingCard = document.getElementById('sym_card_' + itemId);
-        if (existingCard) {
-            document.getElementById('symbol-source-zone').appendChild(existingCard);
+    function clickOnSymbolDropzone(dropzone) {
+        // Si hay una carta seleccionada, colocarla en este dropzone
+        if (selectedSymbolCardId) {
+            const cardOriginal = document.getElementById(selectedSymbolCardId);
+            if (cardOriginal) {
+                // Si la casilla ya tenía un símbolo, mover el existente de vuelta al banco
+                if (dropzone.children.length > 0) {
+                    let childCard = dropzone.children[0];
+                    childCard.classList.remove('selected-symbol');
+                    document.getElementById('symbol-source-zone').appendChild(childCard);
+                }
+
+                // Mover la carta seleccionada
+                cardOriginal.classList.remove('selected-symbol');
+                dropzone.innerHTML = '';
+                dropzone.appendChild(cardOriginal);
+            }
+            selectedSymbolCardId = null;
+            actualizarDropzonesHighlights(false);
+        } else {
+            // Si NO hay carta seleccionada pero el dropzone TIENE una carta, devolverla al banco
+            if (dropzone.children.length > 0) {
+                let cardInDropzone = dropzone.children[0];
+                cardInDropzone.classList.remove('selected-symbol');
+                document.getElementById('symbol-source-zone').appendChild(cardInDropzone);
+            }
         }
+    }
+
+    function actualizarDropzonesHighlights(activar) {
+        document.querySelectorAll('.symbol-dropzone').forEach(dz => {
+            if (activar) dz.classList.add('active-target');
+            else dz.classList.remove('active-target');
+        });
     }
 
     function verificarResultadoSymbols() {
